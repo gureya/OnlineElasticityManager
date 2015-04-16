@@ -15,8 +15,10 @@ public class DataCollector {
 	static DescriptiveStatistics writeStats = new DescriptiveStatistics();
 
 	/**
+	 * Converts the content of a file into an Arraylist for manipulation
+	 * 
 	 * @param path
-	 *            the path of the latency files to read from
+	 *            the path of the latency files
 	 * @param charset
 	 *            default to "UTF-8"
 	 * @return a list of read or write latencies
@@ -39,7 +41,13 @@ public class DataCollector {
 	}
 
 	/**
+	 * A function that computes the read latencies statistics
+	 * 
 	 * @param inputArray
+	 *            collection of all the observed read latencies
+	 * @param windowSize
+	 *            Size of read latencies to take into account
+	 * @return DataStatistics object containing the computed statistics
 	 */
 	public static DataStatistics readStats(Object[] inputArray, int windowSize) {
 		if (windowSize > 0)
@@ -58,31 +66,35 @@ public class DataCollector {
 		 */
 
 		// Compute some statistics
-		double mean = readStats.getMean();
-		double min = readStats.getMin();
-		double max = readStats.getMax();
-		double nfpct = readStats.getPercentile(95);
-		double nnpct = readStats.getPercentile(99);
-		double std = readStats.getStandardDeviation();
-		double median = readStats.getPercentile(50);
-		
+		double mean = readStats.getMean(); // AverageLatency(us)
+		double min = readStats.getMin(); // MinLatency(us)
+		double max = readStats.getMax(); // MaxLatency(us)
+		double nfpct = readStats.getPercentile(95); // 95thPercentileLatency(us)
+		double nnpct = readStats.getPercentile(99); // 99thPercentileLatency(us)
+
 		DataStatistics rdataStatistics = new DataStatistics();
 		rdataStatistics.avgLatency = mean;
 		rdataStatistics.maxLatency = max;
 		rdataStatistics.minLatency = min;
 		rdataStatistics.nfPctLatency = nfpct;
 		rdataStatistics.nnPctLatency = nnpct;
-		
+
 		return rdataStatistics;
 	}
 
 	/**
+	 * A function that computes the write latencies statistics
+	 * 
 	 * @param inputArray
+	 *            collection of all the observed write latencies
+	 * @param windowSize
+	 *            Size of write latencies to take into account
+	 * @return DataStatistics object containing the computed statistics
 	 */
-	public static void writeStats(Object[] inputArray, int windowSize) {
+	public static DataStatistics writeStats(Object[] inputArray, int windowSize) {
 		if (windowSize > 0)
 			writeStats.setWindowSize(windowSize);
-		
+
 		// Add the data from the array
 		for (int i = 0; i < inputArray.length; i++) {
 			writeStats.addValue((double) inputArray[i]);
@@ -96,12 +108,19 @@ public class DataCollector {
 		 */
 
 		// Compute some statistics
-		double mean = writeStats.getMean();
-		double std = writeStats.getStandardDeviation();
-		double median = writeStats.getPercentile(50);
+		double mean = writeStats.getMean(); // AverageLatency(us)
+		double min = writeStats.getMin(); // MinLatency(us)
+		double max = writeStats.getMax(); // MaxLatency(us)
+		double nfpct = writeStats.getPercentile(95); // 95thPercentileLatency(us)
+		double nnpct = writeStats.getPercentile(99); // 99thPercentileLatency(us)
 
-		System.out.println(" \nWrite Statistics");
-		System.out.print("\t Mean: " + mean + "\t std: " + std + "\t median: "
-				+ median);
+		DataStatistics wdataStatistics = new DataStatistics();
+		wdataStatistics.avgLatency = mean;
+		wdataStatistics.maxLatency = max;
+		wdataStatistics.minLatency = min;
+		wdataStatistics.nfPctLatency = nfpct;
+		wdataStatistics.nnPctLatency = nnpct;
+
+		return wdataStatistics;
 	}
 }

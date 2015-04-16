@@ -30,7 +30,7 @@ public class SelfElastManStart {
 	private static List<Double> writeLatencies = new ArrayList<Double>();
 
 	public static void main(String[] args) throws IOException {
-       
+
 		// Test for Read statistics
 		try {
 			readLatencies = DataCollector.readData(readPath, charset);
@@ -38,10 +38,12 @@ public class SelfElastManStart {
 			System.out.print("\t" + readLatencies);
 
 			Object[] inputArray = readLatencies.toArray();
-			
-			DataStatistics rdataStatistics = DataCollector.readStats(inputArray, WindowSize);
+
+			DataStatistics rdataStatistics = DataCollector.readStats(
+					inputArray, WindowSize);
 			System.out.println(" \nRead Statistics");
-			System.out.print("\tMean: " + rdataStatistics.avgLatency + "\t Max: " + rdataStatistics.maxLatency + "\t Min: "
+			System.out.print("\tMean: " + rdataStatistics.avgLatency
+					+ "\t Max: " + rdataStatistics.maxLatency + "\t Min: "
 					+ rdataStatistics.minLatency);
 
 		} catch (Exception e) {
@@ -55,7 +57,13 @@ public class SelfElastManStart {
 			System.out.print("\t" + writeLatencies);
 
 			Object[] inputArray = writeLatencies.toArray();
-			DataCollector.writeStats(inputArray, WindowSize);
+
+			DataStatistics wdataStatistics = DataCollector.writeStats(
+					inputArray, WindowSize);
+			System.out.println(" \nWrite Statistics");
+			System.out.print("\tMean: " + wdataStatistics.avgLatency
+					+ "\t Max: " + wdataStatistics.maxLatency + "\t Min: "
+					+ wdataStatistics.minLatency);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
