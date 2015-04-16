@@ -72,12 +72,8 @@ public class DataCollector {
 		double nfpct = readStats.getPercentile(95); // 95thPercentileLatency(us)
 		double nnpct = readStats.getPercentile(99); // 99thPercentileLatency(us)
 
-		DataStatistics rdataStatistics = new DataStatistics();
-		rdataStatistics.avgLatency = mean;
-		rdataStatistics.maxLatency = max;
-		rdataStatistics.minLatency = min;
-		rdataStatistics.nfPctLatency = nfpct;
-		rdataStatistics.nnPctLatency = nnpct;
+		DataStatistics rdataStatistics = new DataStatistics(mean, min, max,
+				nfpct, nnpct);
 
 		return rdataStatistics;
 	}
@@ -114,12 +110,8 @@ public class DataCollector {
 		double nfpct = writeStats.getPercentile(95); // 95thPercentileLatency(us)
 		double nnpct = writeStats.getPercentile(99); // 99thPercentileLatency(us)
 
-		DataStatistics wdataStatistics = new DataStatistics();
-		wdataStatistics.avgLatency = mean;
-		wdataStatistics.maxLatency = max;
-		wdataStatistics.minLatency = min;
-		wdataStatistics.nfPctLatency = nfpct;
-		wdataStatistics.nnPctLatency = nnpct;
+		DataStatistics wdataStatistics = new DataStatistics(mean, min, max,
+				nfpct, nnpct);
 
 		return wdataStatistics;
 	}

@@ -28,9 +28,24 @@ public class SelfElastManStart {
 
 	private static List<Double> readLatencies = new ArrayList<Double>();
 	private static List<Double> writeLatencies = new ArrayList<Double>();
+	
+	private static Map<OnlineModelMetrics, Integer> modelMap = new HashMap<OnlineModelMetrics, Integer>();
 
 	public static void main(String[] args) throws IOException {
-
+        
+		double rValue = 0;
+        double wValue = 0;
+        double dValue = 10;
+        
+        int valid = 1;
+        int invalid = 0;
+        
+		/*///Anything to test in Javaa
+		double one = 234.1;
+        double two = 234.1;
+        System.out.println(Double.compare(one, two));
+        System.exit(0);*/
+        
 		// Test for Read statistics
 		try {
 			readLatencies = DataCollector.readData(readPath, charset);
@@ -42,10 +57,10 @@ public class SelfElastManStart {
 			DataStatistics rdataStatistics = DataCollector.readStats(
 					inputArray, WindowSize);
 			System.out.println(" \nRead Statistics");
-			System.out.print("\tMean: " + rdataStatistics.avgLatency
-					+ "\t Max: " + rdataStatistics.maxLatency + "\t Min: "
-					+ rdataStatistics.minLatency);
-
+			System.out.print("\tMean: " + rdataStatistics.getAvgLatency()
+					+ "\t Max: " + rdataStatistics.getMaxLatency() + "\t Min: "
+					+ rdataStatistics.getMinLatency());
+        rValue = rdataStatistics.getAvgLatency();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -61,13 +76,20 @@ public class SelfElastManStart {
 			DataStatistics wdataStatistics = DataCollector.writeStats(
 					inputArray, WindowSize);
 			System.out.println(" \nWrite Statistics");
-			System.out.print("\tMean: " + wdataStatistics.avgLatency
-					+ "\t Max: " + wdataStatistics.maxLatency + "\t Min: "
-					+ wdataStatistics.minLatency);
+			System.out.print("\tMean: " + wdataStatistics.getAvgLatency()
+					+ "\t Max: " + wdataStatistics.getMaxLatency() + "\t Min: "
+					+ wdataStatistics.getMinLatency());
+			wValue = wdataStatistics.getAvgLatency();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// Test for the OnlineModel
+		OnlineModelMetrics modelMetrics = new OnlineModelMetrics(rValue, wValue, dValue);
+		modelMap = OnlineModel.buildModel(modelMap, modelMetrics, valid);
+		System.out.println("\nMap Elements @iter ");
+		System.out.print("\t" + modelMap);
 	}
 
 }
