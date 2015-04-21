@@ -10,9 +10,16 @@ public class SelfElastManStart {
 	Timer timer;
 	public static int timerWindow = 5;
 
-	private static Map<OnlineModelMetrics, Integer> modelMap = new HashMap<OnlineModelMetrics, Integer>();
-	DataStatistics statsArray[] = new DataStatistics[2];
-
+	private double readLModel[][][] = new double[500][500][500];
+	
+	private int rstart;
+	private int wstart;
+	private int rend;
+	private int wend;
+	private int read;
+	private int write;
+	private static int scale = 50;
+	
 	public SelfElastManStart(int seconds) {
 		timer = new Timer();
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
@@ -22,16 +29,18 @@ public class SelfElastManStart {
 		new SelfElastManStart(timerWindow);
 	}
 
+	double rThroughput = 50;
+	double wThroughput = 100;
+	double rPercentile = 10;
+	int dValue = 10;
+	
+	
 	class PeriodicExecutor extends TimerTask {
 		@Override
 		public void run() {
 			System.out.println("\nTimer Task Started..!%n");
-			double rThroughput = 0;
-			double wThroughput = 0;
-			double rPercentile = 0;
-			double dValue = 10;
 
-			DataStatistics statsArray[] = new DataStatistics[2];
+			//DataStatistics statsArray[] = new DataStatistics[2];
 
 			/*
 			 * ///Anything to test in Javaa double one = 234.1; double two =
@@ -39,34 +48,40 @@ public class SelfElastManStart {
 			 * System.exit(0);
 			 */
 
-			// Test for Read and Write statistics
-			try {
-				statsArray = DataCollector.collectCassandraStats();
-				rThroughput = statsArray[0].getThroughput();
-				wThroughput = statsArray[1].getThroughput();
-				rPercentile = statsArray[0].getNnPctLatency();
+			int rt = (int) (rThroughput/scale);
+			int wt = (int) (wThroughput/scale);
+			
+			rstart = rt * scale;
+			rend = rstart + scale;
+			
+			wstart = wt * scale;
+			wend = wstart + scale;
+			
+			read = (rstart + rend)/2;
+			write = (wstart + wend)/2;
+			
+			System.out.println(" \nRead Statistics");
+			System.out.print("\tThroughput: " + rThroughput
+					+ "\t 99th Percentile Latency: " + rPercentile);
 
-				System.out.println(" \nRead Statistics");
-				System.out.print("\tThroughput: " + rThroughput
-						+ "\t 99th Percentile Latency: " + rPercentile);
-
-				System.out.println(" \nWrite Statistics");
-				System.out.print("\tThroughput: " + wThroughput);
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			System.out.println(" \nWrite Statistics");
+			System.out.print("\tThroughput: " + wThroughput);
+			
+			//Test for the OnlineModel
+			readLModel = OnlineModel.buildModel(readLModel, read, write, dValue, rPercentile);
+			
+			for (int i = 0; i < readLModel.length; i++) {
+				for (int j = 0; j < readLModel.length; j++) {
+					for (int k = 0; k < readLModel.length; k++) {
+						if(readLModel[i][j][k] != 0)
+							System.out.println("\nRead: " + i + "\tWrite: " + j + "\tDatasize: " + k + "\tReadLatency: " + readLModel[i][j][k]);
+					}
+				}
 			}
 
-			// Test for the OnlineModel
-			/*
-			 * OnlineModelMetrics modelMetrics = new
-			 * OnlineModelMetrics(rThroughput, wThroughput, dValue); modelMap =
-			 * OnlineModel.buildModel(modelMap, modelMetrics, valid);
-			 * System.out.println("\nMap Elements @iter ");
-			 * System.out.print("\t" + modelMap);
-			 */
 			System.out.println("\nTimer Task Finished..!%n");
+			rThroughput = rThroughput + 25;
+			wThroughput = wThroughput + 25;
 		}
 	}
 
