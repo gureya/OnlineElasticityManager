@@ -11,16 +11,22 @@ public class SelfElastManStart {
 	public static int timerWindow = 5;
 
 	private double readLModel[][][] = new double[500][500][500];
-	
+
+	private OnlineModelMetrics[] dataPoints = new OnlineModelMetrics[50];
+
 	private int rstart;
 	private int wstart;
 	private int rend;
 	private int wend;
-	private int read;
-	private int write;
+	private int fineRead;
+	private int fineWrite;
 	private static int scale = 50;
-	
+	private static int queueLength = 10;
+
 	public SelfElastManStart(int seconds) {
+		for (int i = 0; i < dataPoints.length; i++) {
+			dataPoints[i] = new OnlineModelMetrics(0, 0, 0, 0, null);
+		}
 		timer = new Timer();
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
 	}
@@ -33,14 +39,13 @@ public class SelfElastManStart {
 	double wThroughput = 100;
 	double rPercentile = 10;
 	int dValue = 10;
-	
-	
+
 	class PeriodicExecutor extends TimerTask {
 		@Override
 		public void run() {
 			System.out.println("\nTimer Task Started..!%n");
 
-			//DataStatistics statsArray[] = new DataStatistics[2];
+			// DataStatistics statsArray[] = new DataStatistics[2];
 
 			/*
 			 * ///Anything to test in Javaa double one = 234.1; double two =
@@ -48,18 +53,18 @@ public class SelfElastManStart {
 			 * System.exit(0);
 			 */
 
-			int rt = (int) (rThroughput/scale);
-			int wt = (int) (wThroughput/scale);
-			
+			int rt = (int) (rThroughput / scale);
+			int wt = (int) (wThroughput / scale);
+
 			rstart = rt * scale;
 			rend = rstart + scale;
-			
+
 			wstart = wt * scale;
 			wend = wstart + scale;
-			
-			read = (rstart + rend)/2;
-			write = (wstart + wend)/2;
-			
+
+			fineRead = (rstart + rend) / 2;
+			fineWrite = (wstart + wend) / 2;
+
 			System.out.println(" \nRead Statistics");
 			System.out.print("\tThroughput: " + rThroughput
 					+ "\t 99th Percentile Latency: " + rPercentile);
@@ -67,17 +72,25 @@ public class SelfElastManStart {
 			System.out.println(" \nWrite Statistics");
 			System.out.print("\tThroughput: " + wThroughput);
 			
-			//Test for the OnlineModel
-			readLModel = OnlineModel.buildModel(readLModel, read, write, dValue, rPercentile);
 			
-			for (int i = 0; i < readLModel.length; i++) {
-				for (int j = 0; j < readLModel.length; j++) {
-					for (int k = 0; k < readLModel.length; k++) {
-						if(readLModel[i][j][k] != 0)
-							System.out.println("\nRead: " + i + "\tWrite: " + j + "\tDatasize: " + k + "\tReadLatency: " + readLModel[i][j][k]);
-					}
+			// Test for the OnlineModel
+			Queue<Double> qe = new LinkedList<Double>();
+			OnlineModelMetrics omm = new OnlineModelMetrics(fineRead,
+					fineWrite, dValue, rPercentile, qe);
+			dataPoints = OnlineModel.buildModel(dataPoints, omm);
+
+			for (int i = 0; i < dataPoints.length; i++) {
+				if (dataPoints[i].getrThroughput() != 0
+						&& dataPoints[i].getwThroughput() != 0
+						&& dataPoints[i].getDatasize() != 0 && dataPoints[i].getLatency() != 0 && dataPoints[i].getlQueue() != null){
+					System.out.println("\nRead: "
+							+ dataPoints[i].getrThroughput() + "\tWrite: "
+							+ dataPoints[i].getwThroughput() + "\tDatasize: "
+							+ dataPoints[i].getDatasize() + "\tReadLatency: "
+							+ dataPoints[i].getLatency());
 				}
 			}
+
 
 			System.out.println("\nTimer Task Finished..!%n");
 			rThroughput = rThroughput + 25;
