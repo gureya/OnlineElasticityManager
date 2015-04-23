@@ -8,14 +8,14 @@ public class SelfElastManStart {
 	Timer timer;
 	public static int timerWindow = 5;
 
-	private static OnlineModelMetrics[] dataPoints = new OnlineModelMetrics[50];
+	private static OnlineModelMetrics[][] dataPoints = new OnlineModelMetrics[500][500];
 
 	private int rstart;
 	private int wstart;
 	private int rend;
 	private int wend;
-	private double fineRead;
-	private double fineWrite;
+	private int fineRead;
+	private int fineWrite;
 	public static final int scale = 50;
 	public static final int queueLength = 10;
 
@@ -26,10 +26,9 @@ public class SelfElastManStart {
 
 	public static void main(String[] args) throws IOException {
 		// Initialize all the datapoints
-		for (int i = 0; i < dataPoints.length; i++) {
-			dataPoints[i] = new OnlineModelMetrics(0, 0, 0, 0, false, null);
-		}
-
+		//for (int i = 0; i < dataPoints.length; i++) {
+		//	dataPoints[i] = new OnlineModelMetrics(0, 0, 0, 0, false, null);
+		//}
 		new SelfElastManStart(timerWindow);
 	}
 
@@ -81,13 +80,15 @@ public class SelfElastManStart {
 			// dataPoints.length);
 
 			for (int i = 0; i < dataPoints.length; i++) {
-				if (dataPoints[i].isHasValue()) {
+				for(int j = 0; j < dataPoints[i].length; j++){
+				if (dataPoints[i][j] != null) {
 					System.out.println("\nRead: "
-							+ dataPoints[i].getrThroughput() + "\tWrite: "
-							+ dataPoints[i].getwThroughput() + "\tDatasize: "
-							+ dataPoints[i].getDatasize() + "\tReadLatency: "
-							+ dataPoints[i].getLatency() + "\tQueue: "
-							+ dataPoints[i].getlQueue());
+							+ dataPoints[i][j].getrThroughput() + "\tWrite: "
+							+ dataPoints[i][j].getwThroughput() + "\tDatasize: "
+							+ dataPoints[i][j].getDatasize() + "\tReadLatency: "
+							+ dataPoints[i][j].getLatency() + "\tQueue: "
+							+ dataPoints[i][j].getlQueue());
+				}
 				}
 			}
 

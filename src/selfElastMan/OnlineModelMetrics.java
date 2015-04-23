@@ -3,14 +3,14 @@ package selfElastMan;
 import java.util.Queue;
 
 public class OnlineModelMetrics {
-	private double rThroughput;
-	private double wThroughput;
+	private int rThroughput;
+	private int wThroughput;
 	private double datasize;
 	private double latency;
 	private boolean hasValue;
 	private Queue<Double> lQueue;
 
-	public OnlineModelMetrics(double rThroughput, double wThroughput,
+	public OnlineModelMetrics(int rThroughput, int wThroughput,
 			double datasize, double latency, boolean hasValue,
 			Queue<Double> lQueue) {
 		// super();
@@ -26,11 +26,11 @@ public class OnlineModelMetrics {
 		return hasValue;
 	}
 
-	public double getrThroughput() {
+	public int getrThroughput() {
 		return rThroughput;
 	}
 
-	public double getwThroughput() {
+	public int getwThroughput() {
 		return wThroughput;
 	}
 
