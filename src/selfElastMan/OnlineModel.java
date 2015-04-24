@@ -8,15 +8,28 @@ public class OnlineModel {
 		int j = omm.getwThroughput();
 		if (dataPoints[i][j] != null) {
 			System.out
-					.println("\nPoint already exist,,,Just updating the Queue");
-			// Update the Queue
-			if (dataPoints[i][j].getlQueue().size() > SelfElastManStart.queueLength) {
+					.println("\nPoint already exist,,,Just updating the respective Queues");
+
+			// Update the Read Queue
+			// TODO: Move this to a function
+			if (dataPoints[i][j].getrQueue().size() > SelfElastManStart.queueLength) {
 				// Remove the first element added to the queue
-				dataPoints[i][j].getlQueue().remove();
+				dataPoints[i][j].getrQueue().remove();
 				// Then update the queue with the current value
-				dataPoints[i][j].getlQueue().add(omm.getLatency());
+				dataPoints[i][j].getrQueue().add(omm.getRlatency());
 			} else {
-				dataPoints[i][j].getlQueue().add(omm.getLatency());
+				dataPoints[i][j].getrQueue().add(omm.getRlatency());
+			}
+
+			// Update the Write Queue
+			// TODO: Move this to a function
+			if (dataPoints[i][j].getwQueue().size() > SelfElastManStart.queueLength) {
+				// Remove the first element added to the queue
+				dataPoints[i][j].getwQueue().remove();
+				// Then update the queue with the current value
+				dataPoints[i][j].getwQueue().add(omm.getWlatency());
+			} else {
+				dataPoints[i][j].getwQueue().add(omm.getWlatency());
 			}
 		} else {
 			// Add to the data points

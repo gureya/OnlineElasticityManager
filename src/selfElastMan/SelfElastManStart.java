@@ -3,12 +3,16 @@ package selfElastMan;
 import java.io.*;
 import java.util.*;
 
+import org.apache.cassandra.service.DataStatistics;
+
 public class SelfElastManStart {
 
 	Timer timer;
 	public static int timerWindow = 5;
 
-	private static OnlineModelMetrics[][] dataPoints = new OnlineModelMetrics[500][500];
+	public static OnlineModelMetrics[][] dataPoints = new OnlineModelMetrics[500][500];
+	public static final int scale = 50;
+	public static final int queueLength = 10;
 
 	private int rstart;
 	private int wstart;
@@ -16,8 +20,6 @@ public class SelfElastManStart {
 	private int wend;
 	private int fineRead;
 	private int fineWrite;
-	public static final int scale = 50;
-	public static final int queueLength = 10;
 
 	public SelfElastManStart(int seconds) {
 		timer = new Timer();
@@ -25,17 +27,8 @@ public class SelfElastManStart {
 	}
 
 	public static void main(String[] args) throws IOException {
-		// Initialize all the datapoints
-		//for (int i = 0; i < dataPoints.length; i++) {
-		//	dataPoints[i] = new OnlineModelMetrics(0, 0, 0, 0, false, null);
-		//}
 		new SelfElastManStart(timerWindow);
 	}
-
-	double rThroughput = 50;
-	double wThroughput = 100;
-	double rPercentile = 10;
-	int dValue = 10;
 
 	class PeriodicExecutor extends TimerTask {
 		@Override
@@ -47,54 +40,92 @@ public class SelfElastManStart {
 			 * 234.1; System.out.println(Double.compare(one, two));
 			 * System.exit(0);
 			 */
+			double rThroughput = 0;
+			double wThroughput = 0;
+			double rPercentile = 0;
+			double wPercentile = 0;
 
-			int rt = (int) (rThroughput / scale);
-			int wt = (int) (wThroughput / scale);
+			// Average dataSize Need to find a way to get from the Cassandra
+			// Cluster!
+			double dataSize = 0;
 
-			rstart = rt * scale;
-			rend = rstart + scale;
+			DataStatistics statsArray[];
+			try {
+				statsArray = DataCollector.collectCassandraStats();
+				if (!Double.isNaN(statsArray[0].getThroughput()))
+					rThroughput = statsArray[0].getThroughput();
+				if (!Double.isNaN(statsArray[1].getThroughput()))
+					wThroughput = statsArray[1].getThroughput();
+				if (!Double.isNaN(statsArray[0].getNnPctLatency()))
+					rPercentile = statsArray[0].getNnPctLatency();
+				if (!Double.isNaN(statsArray[1].getNnPctLatency()))
+					wPercentile = statsArray[1].getNnPctLatency();
+				if(!Double.isNaN(statsArray[0].getDataSize()))
+					dataSize = statsArray[0].getDataSize();
+				
+				if (rThroughput == 0 && wThroughput == 0 && dataSize == 0) {
+					System.out.println("No New dataStatistics found...Zero operations reported");
+				} else {
+					int rt = (int) (rThroughput / scale);
+					int wt = (int) (wThroughput / scale);
 
-			wstart = wt * scale;
-			wend = wstart + scale;
+					rstart = rt * scale;
+					rend = rstart + scale;
 
-			fineRead = (rstart + rend) / 2;
-			fineWrite = (wstart + wend) / 2;
+					wstart = wt * scale;
+					wend = wstart + scale;
 
-			System.out.println(" \nRead Statistics");
-			System.out.print("\tThroughput: " + rThroughput
-					+ "\t 99th Percentile Latency: " + rPercentile);
+					fineRead = (rstart + rend) / 2;
+					fineWrite = (wstart + wend) / 2;
 
-			System.out.println(" \nWrite Statistics");
-			System.out.print("\tThroughput: " + wThroughput);
+					System.out.println(" \nRead Statistics");
+					System.out.print("\tThroughput: " + rThroughput
+							+ "\t 99th Percentile Latency: " + rPercentile);
 
-			// Test for the OnlineModel
-			Queue<Double> qe = new LinkedList<Double>();
-			qe.add(rPercentile); // Queue is not null
-			OnlineModelMetrics omm = new OnlineModelMetrics(fineRead,
-					fineWrite, dValue, rPercentile, true, qe);
+					System.out.println(" \nWrite Statistics");
+					System.out.print("\tThroughput: " + wThroughput);
 
-			// OnlineModelMetrics[] newdataPoints = new
-			// OnlineModelMetrics[dataPoints.length];
-			dataPoints = OnlineModel.buildModel(dataPoints, omm);
-			// System.arraycopy(newdataPoints, 0, dataPoints, 0,
-			// dataPoints.length);
+					// Test for the OnlineModel
+					Queue<Double> rqe = new LinkedList<Double>();
+					Queue<Double> wqe = new LinkedList<Double>();
 
-			for (int i = 0; i < dataPoints.length; i++) {
-				for(int j = 0; j < dataPoints[i].length; j++){
-				if (dataPoints[i][j] != null) {
-					System.out.println("\nRead: "
-							+ dataPoints[i][j].getrThroughput() + "\tWrite: "
-							+ dataPoints[i][j].getwThroughput() + "\tDatasize: "
-							+ dataPoints[i][j].getDatasize() + "\tReadLatency: "
-							+ dataPoints[i][j].getLatency() + "\tQueue: "
-							+ dataPoints[i][j].getlQueue());
+					rqe.add(rPercentile); // Read Queue is not null
+					wqe.add(wPercentile); // Write Queue is not null
+
+					OnlineModelMetrics omm = new OnlineModelMetrics(fineRead,
+							fineWrite, (int) dataSize, rPercentile,
+							wPercentile, true, rqe, wqe, true);
+
+					// OnlineModelMetrics[] newdataPoints = new
+					// OnlineModelMetrics[dataPoints.length];
+					dataPoints = OnlineModel.buildModel(dataPoints, omm);
+					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
+					// dataPoints.length);
+
+					for (int i = 0; i < dataPoints.length; i++) {
+						for (int j = 0; j < dataPoints[i].length; j++) {
+							if (dataPoints[i][j] != null) {
+								System.out.println("\nRead: "
+										+ dataPoints[i][j].getrThroughput()
+										+ "\tWrite: "
+										+ dataPoints[i][j].getwThroughput()
+										+ "\tDatasize: "
+										+ dataPoints[i][j].getDatasize()
+										+ "\tReadLatency: "
+										+ dataPoints[i][j].getRlatency()
+										+ "\tRead Queue: "
+										+ dataPoints[i][j].getrQueue()
+										+ "\tWrite Queue: "
+										+ dataPoints[i][j].getwQueue());
+							}
+						}
+					}
 				}
-				}
+				System.out.println("\nTimer Task Finished..!%n");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-
-			System.out.println("\nTimer Task Finished..!%n");
-			rThroughput = rThroughput + 25;
-			wThroughput = wThroughput + 25;
 		}
 	}
 

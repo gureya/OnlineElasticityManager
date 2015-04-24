@@ -5,25 +5,27 @@ import java.util.Queue;
 public class OnlineModelMetrics {
 	private int rThroughput;
 	private int wThroughput;
-	private double datasize;
-	private double latency;
+	private int datasize;
+	private double rlatency; // Read latency 99th Percentile
+	private double wlatency; // Write latency
 	private boolean hasValue;
-	private Queue<Double> lQueue;
+	private boolean valid;
+	private Queue<Double> rQueue; // A Queue for the Read Latencies
+	private Queue<Double> wQueue;
 
-	public OnlineModelMetrics(int rThroughput, int wThroughput,
-			double datasize, double latency, boolean hasValue,
-			Queue<Double> lQueue) {
-		// super();
+	public OnlineModelMetrics(int rThroughput, int wThroughput, int datasize,
+			double rlatency, double wlatency, boolean hasValue,
+			Queue<Double> rQueue, Queue<Double> wQueue, boolean valid) {
+		super();
 		this.rThroughput = rThroughput;
 		this.wThroughput = wThroughput;
 		this.datasize = datasize;
-		this.latency = latency;
+		this.rlatency = rlatency;
+		this.wlatency = wlatency;
 		this.hasValue = hasValue;
-		this.lQueue = lQueue;
-	}
-
-	public boolean isHasValue() {
-		return hasValue;
+		this.rQueue = rQueue;
+		this.wQueue = wQueue;
+		this.valid = valid;
 	}
 
 	public int getrThroughput() {
@@ -34,16 +36,32 @@ public class OnlineModelMetrics {
 		return wThroughput;
 	}
 
-	public double getDatasize() {
+	public int getDatasize() {
 		return datasize;
 	}
 
-	public double getLatency() {
-		return latency;
+	public double getRlatency() {
+		return rlatency;
 	}
 
-	public Queue<Double> getlQueue() {
-		return lQueue;
+	public double getWlatency() {
+		return wlatency;
+	}
+
+	public boolean isHasValue() {
+		return hasValue;
+	}
+
+	public Queue<Double> getrQueue() {
+		return rQueue;
+	}
+
+	public Queue<Double> getwQueue() {
+		return wQueue;
+	}
+
+	public boolean isValid() {
+		return valid;
 	}
 
 }

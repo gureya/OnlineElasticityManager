@@ -2,6 +2,7 @@ package selfElastMan;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -17,9 +18,14 @@ public class DataCollector {
 
 		try {
 			statsArray = (DataStatistics[]) ois.readObject();
+			System.out.println("Success: pulling DataStatistics from the Cassandra node...");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
+			System.out.println("Failed: pulling DataStatistics from the Cassandra noode..." + e.getMessage());
 			e.printStackTrace();
+		}
+		catch (ConnectException conn){
+			System.out.println("Failed: pulling DataStatistics from the Cassandra noode..." + conn.getMessage());
 		}
 
 		return statsArray;
