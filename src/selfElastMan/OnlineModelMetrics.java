@@ -2,6 +2,10 @@ package selfElastMan;
 
 import java.util.Queue;
 
+/**
+ * @author GUREYA
+ *
+ */
 public class OnlineModelMetrics {
 	private int rThroughput;
 	private int wThroughput;

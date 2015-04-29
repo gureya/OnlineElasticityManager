@@ -2,6 +2,10 @@ package org.apache.cassandra.service;
 
 import java.io.Serializable;
 
+/**
+ * @author GUREYA
+ *
+ */
 @SuppressWarnings("serial")
 public class DataStatistics implements Serializable {
 	private double avgLatency;

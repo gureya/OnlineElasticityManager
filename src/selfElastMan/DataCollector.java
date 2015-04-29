@@ -7,8 +7,14 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import org.apache.cassandra.service.DataStatistics;
+import org.apache.log4j.Logger;
 
+/**
+ * @author GUREYA
+ *
+ */
 public class DataCollector {
+	static Logger log = Logger.getLogger(DataCollector.class);
 	public static DataStatistics[] collectCassandraStats() throws IOException {
 		DataStatistics statsArray[] = new DataStatistics[2];
 		String serverAddress = InetAddress.getLocalHost().getHostAddress()
@@ -18,14 +24,17 @@ public class DataCollector {
 
 		try {
 			statsArray = (DataStatistics[]) ois.readObject();
-			System.out.println("Success: pulling DataStatistics from the Cassandra node...");
+			log.info("Success: pulling DataStatitics from the Cassandra node...");
+			//System.out.println("Success: pulling DataStatistics from the Cassandra node...");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
-			System.out.println("Failed: pulling DataStatistics from the Cassandra noode..." + e.getMessage());
-			e.printStackTrace();
+			log.info("Failed: pulling DataStatistics from the Cassandra noe..."+e.getMessage());
+			//System.out.println("Failed: pulling DataStatistics from the Cassandra node..." + e.getMessage());
+			//e.printStackTrace();
 		}
 		catch (ConnectException conn){
-			System.out.println("Failed: pulling DataStatistics from the Cassandra noode..." + conn.getMessage());
+			log.fatal("Failed: pulling DataStatistics from the Cassandra node..."+conn.getMessage());
+			//System.out.println("Failed: pulling DataStatistics from the Cassandra node..." + conn.getMessage());
 		}
 
 		return statsArray;

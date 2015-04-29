@@ -1,15 +1,21 @@
 package selfElastMan;
 
-public class OnlineModel {
+import org.apache.log4j.Logger;
 
+/**
+ * @author GUREYA
+ *
+ */
+public class OnlineModel {
+    static Logger log = Logger.getLogger(OnlineModel.class);
 	public static OnlineModelMetrics[][] buildModel(
 			OnlineModelMetrics[][] dataPoints, OnlineModelMetrics omm) {
 		int i = omm.getrThroughput();
 		int j = omm.getwThroughput();
 		if (dataPoints[i][j] != null) {
-			System.out
-					.println("\nPoint already exist,,,Just updating the respective Queues");
-
+			//System.out
+			//		.println("\nPoint already exist,,,Just updating the respective Queues");
+			log.debug("Point already exist,,,Just updating the respective Queues");
 			// Update the Read Queue
 			// TODO: Move this to a function
 			if (dataPoints[i][j].getrQueue().size() > SelfElastManStart.queueLength) {
@@ -33,7 +39,8 @@ public class OnlineModel {
 			}
 		} else {
 			// Add to the data points
-			System.out.println("New data point,,,Adding to the datapoints");
+			log.debug("New data point,,,Adding to the datapoints");
+			//System.out.println("New data point,,,Adding to the datapoints");
 			dataPoints[i][j] = omm;
 		}
 

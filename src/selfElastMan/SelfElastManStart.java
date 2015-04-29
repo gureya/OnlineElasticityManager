@@ -4,15 +4,24 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.cassandra.service.DataStatistics;
+import org.apache.log4j.Logger;
 
+/**
+ * @author GUREYA
+ *
+ */
 public class SelfElastManStart {
 
-	Timer timer;
 	public static int timerWindow = 5;
+	public static OnlineModelMetrics[][] dataPoints;
+	public static int scale = 50;
+	public static int queueLength = 10;
+	public static int maxReadTP = 500;
+	public static int maxWriteTP = 500;
+	public static int maxDataSize = 100;
 
-	public static OnlineModelMetrics[][] dataPoints = new OnlineModelMetrics[500][500];
-	public static final int scale = 50;
-	public static final int queueLength = 10;
+	static Logger log = Logger.getLogger(SelfElastManStart.class);
+	Timer timer;
 
 	private int rstart;
 	private int wstart;
@@ -23,6 +32,30 @@ public class SelfElastManStart {
 
 	public SelfElastManStart(int seconds) {
 		timer = new Timer();
+		log.info("Starting the Autonomic Controller...");
+
+		// Read from the config properties if any
+		Utilities properties = new Utilities();
+		try {
+			properties.getProperties();
+			timerWindow = Integer.parseInt(properties.timerWindow.trim());
+			maxReadTP = Integer.parseInt(properties.maxReadTP.trim());
+			maxWriteTP = Integer.parseInt(properties.maxWriteTP.trim());
+			maxDataSize = Integer.parseInt(properties.maxDataSize.trim());
+			scale = Integer.parseInt(properties.scale.trim());
+			queueLength = Integer.parseInt(properties.queueLength.trim());
+			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP];
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String message = "Config Properties: timerWindow:" + timerWindow
+				+ "\tmaxReaTP:" + maxReadTP + "\tmaxWriteTP:" + maxWriteTP
+				+ "\tmaxDataSize:" + maxDataSize + "\tqueueLength:"
+				+ queueLength;
+		log.info(message);
+
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
 	}
 
@@ -33,13 +66,8 @@ public class SelfElastManStart {
 	class PeriodicExecutor extends TimerTask {
 		@Override
 		public void run() {
-			System.out.println("\nTimer Task Started..!%n");
-
-			/*
-			 * ///Anything to test in Javaa double one = 234.1; double two =
-			 * 234.1; System.out.println(Double.compare(one, two));
-			 * System.exit(0);
-			 */
+			// System.out.println("\nTimer Task Started..!%n");
+			log.debug("Timer Task Started..!%n...Collecting Periodic Statistics");
 			double rThroughput = 0;
 			double wThroughput = 0;
 			double rPercentile = 0;
@@ -60,11 +88,13 @@ public class SelfElastManStart {
 					rPercentile = statsArray[0].getNnPctLatency();
 				if (!Double.isNaN(statsArray[1].getNnPctLatency()))
 					wPercentile = statsArray[1].getNnPctLatency();
-				if(!Double.isNaN(statsArray[0].getDataSize()))
+				if (!Double.isNaN(statsArray[0].getDataSize()))
 					dataSize = statsArray[0].getDataSize();
-				
+
 				if (rThroughput == 0 && wThroughput == 0 && dataSize == 0) {
-					System.out.println("No New dataStatistics found...Zero operations reported");
+					log.info("No New dataStatitistics found...Zero operations reported");
+					// System.out
+					// .println("No New dataStatistics found...Zero operations reported");
 				} else {
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
@@ -78,12 +108,16 @@ public class SelfElastManStart {
 					fineRead = (rstart + rend) / 2;
 					fineWrite = (wstart + wend) / 2;
 
-					System.out.println(" \nRead Statistics");
-					System.out.print("\tThroughput: " + rThroughput
+					//System.out.println(" \nRead Statistics");
+					//System.out.print("\tThroughput: " + rThroughput
+					//		+ "\t 99th Percentile Latency: " + rPercentile);
+					log.debug("Read Statistics:\tThroughput: " + rThroughput
 							+ "\t 99th Percentile Latency: " + rPercentile);
 
-					System.out.println(" \nWrite Statistics");
-					System.out.print("\tThroughput: " + wThroughput);
+					//System.out.println(" \nWrite Statistics");
+					//System.out.print("\tThroughput: " + wThroughput);
+					log.debug("Write Statistics:\tThroughput: " + wThroughput
+							+ "\t 99th Percentile Latency: " + wPercentile);
 
 					// Test for the OnlineModel
 					Queue<Double> rqe = new LinkedList<Double>();
@@ -121,10 +155,15 @@ public class SelfElastManStart {
 						}
 					}
 				}
-				System.out.println("\nTimer Task Finished..!%n");
+				// System.out.println("\nTimer Task Finished..!%n");
+				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// System.out.println("\nTimer Task Aborted with Errors...!%n: "
+				// + e.getMessage());
+				log.debug("Timer Task Aborted with Errors...!%n: "
+						+ e.getMessage());
+				// e.printStackTrace();
 			}
 		}
 	}
