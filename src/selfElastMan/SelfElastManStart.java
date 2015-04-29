@@ -11,7 +11,8 @@ import org.apache.log4j.Logger;
  *
  */
 public class SelfElastManStart {
-
+	
+	//Default configurations overwritten by the config properties
 	public static int timerWindow = 5;
 	public static OnlineModelMetrics[][] dataPoints;
 	public static int scale = 50;
