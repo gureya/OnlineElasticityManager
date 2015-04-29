@@ -16,9 +16,13 @@ public class DataStatistics implements Serializable {
 	private double throughput;
 	private double dataSize;
 
+	// for debugging purposes
+	private double sum;
+	private double noRequests;
+
 	public DataStatistics(double avgLatency, double minLatency,
 			double maxLatency, double nfPctLatency, double nnPctLatency,
-			double throughput, double dataSize) {
+			double throughput, double dataSize, double sum, double noRequests) {
 		// super();
 		this.avgLatency = avgLatency;
 		this.minLatency = minLatency;
@@ -27,6 +31,10 @@ public class DataStatistics implements Serializable {
 		this.nnPctLatency = nnPctLatency;
 		this.throughput = throughput;
 		this.dataSize = dataSize;
+
+		// for debugging purposes
+		this.sum = sum;
+		this.noRequests = noRequests;
 	}
 
 	public double getAvgLatency() {
@@ -55,6 +63,15 @@ public class DataStatistics implements Serializable {
 
 	public double getDataSize() {
 		return dataSize;
+	}
+
+	// for debugging purposes
+	public double getSum() {
+		return sum;
+	}
+
+	public double getNoRequests() {
+		return noRequests;
 	}
 
 }

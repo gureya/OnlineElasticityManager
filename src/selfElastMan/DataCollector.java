@@ -28,7 +28,7 @@ public class DataCollector {
 			//System.out.println("Success: pulling DataStatistics from the Cassandra node...");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
-			log.info("Failed: pulling DataStatistics from the Cassandra noe..."+e.getMessage());
+			log.info("Failed: pulling DataStatistics from the Cassandra node..."+e.getMessage());
 			//System.out.println("Failed: pulling DataStatistics from the Cassandra node..." + e.getMessage());
 			//e.printStackTrace();
 		}

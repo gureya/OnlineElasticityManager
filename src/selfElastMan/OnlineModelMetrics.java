@@ -13,13 +13,13 @@ public class OnlineModelMetrics {
 	private double rlatency; // Read latency 99th Percentile
 	private double wlatency; // Write latency
 	private boolean hasValue;
-	private boolean valid;
-	private Queue<Double> rQueue; // A Queue for the Read Latencies
-	private Queue<Double> wQueue;
+	private boolean valid; // true = not violate sla; false = violate sla 
+	private Queue<Integer> rQueue; // A Queue for the Read Latencies
+	private Queue<Integer> wQueue;
 
 	public OnlineModelMetrics(int rThroughput, int wThroughput, int datasize,
 			double rlatency, double wlatency, boolean hasValue,
-			Queue<Double> rQueue, Queue<Double> wQueue, boolean valid) {
+			Queue<Integer> rQueue, Queue<Integer> wQueue, boolean valid) {
 		super();
 		this.rThroughput = rThroughput;
 		this.wThroughput = wThroughput;
@@ -56,11 +56,11 @@ public class OnlineModelMetrics {
 		return hasValue;
 	}
 
-	public Queue<Double> getrQueue() {
+	public Queue<Integer> getrQueue() {
 		return rQueue;
 	}
 
-	public Queue<Double> getwQueue() {
+	public Queue<Integer> getwQueue() {
 		return wQueue;
 	}
 

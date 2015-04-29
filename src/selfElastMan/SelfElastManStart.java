@@ -108,23 +108,29 @@ public class SelfElastManStart {
 					fineRead = (rstart + rend) / 2;
 					fineWrite = (wstart + wend) / 2;
 
-					//System.out.println(" \nRead Statistics");
-					//System.out.print("\tThroughput: " + rThroughput
-					//		+ "\t 99th Percentile Latency: " + rPercentile);
-					log.debug("Read Statistics:\tThroughput: " + rThroughput
-							+ "\t 99th Percentile Latency: " + rPercentile);
+					// System.out.println(" \nRead Statistics");
+					// System.out.print("\tThroughput: " + rThroughput
+					// + "\t 99th Percentile Latency: " + rPercentile);
+					log.debug("Read Statistics:\tSum: "
+							+ statsArray[0].getSum() + "\tnoRequests:"
+							+ statsArray[0].getNoRequests() + "\tThroughput: "
+							+ rThroughput + "\t 99th Percentile Latency: "
+							+ rPercentile);
 
-					//System.out.println(" \nWrite Statistics");
-					//System.out.print("\tThroughput: " + wThroughput);
-					log.debug("Write Statistics:\tThroughput: " + wThroughput
-							+ "\t 99th Percentile Latency: " + wPercentile);
+					// System.out.println(" \nWrite Statistics");
+					// System.out.print("\tThroughput: " + wThroughput);
+					log.debug("Write Statistics:\tSum: "
+							+ statsArray[1].getSum() + "\tnoRequests:"
+							+ statsArray[1].getNoRequests() + "\tThroughput: "
+							+ wThroughput + "\t 99th Percentile Latency: "
+							+ wPercentile);
 
 					// Test for the OnlineModel
-					Queue<Double> rqe = new LinkedList<Double>();
-					Queue<Double> wqe = new LinkedList<Double>();
+					Queue<Integer> rqe = new LinkedList<Integer>();
+					Queue<Integer> wqe = new LinkedList<Integer>();
 
-					rqe.add(rPercentile); // Read Queue is not null
-					wqe.add(wPercentile); // Write Queue is not null
+					rqe.add((int) rPercentile); // Read Queue is not null
+					wqe.add((int) wPercentile); // Write Queue is not null
 
 					OnlineModelMetrics omm = new OnlineModelMetrics(fineRead,
 							fineWrite, (int) dataSize, rPercentile,
