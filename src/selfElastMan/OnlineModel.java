@@ -59,9 +59,9 @@ public class OnlineModel {
 			
 			//for debugging...print the datapoints to a file
 			int valid = (omm.isValid()) ? 1 : 0;
-			data = omm.getrThroughput() + ";" + omm.getwThroughput() + ";"
-					+ omm.getDatasize() + ";" + (int) omm.getRlatency() + ";"
-					+ (int) omm.getWlatency() + ";" + valid;
+			data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
+					+ omm.getDatasize() + "," + (int) omm.getRlatency() + ","
+					+ (int) omm.getWlatency() + "," + valid;
 			printtoFile(file, data);
 		}
         }
