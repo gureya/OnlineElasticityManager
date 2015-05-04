@@ -76,7 +76,7 @@ public class SelfElastManStart {
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0;
+			double dataSize = 0; //Default
 
 			DataStatistics statsArray[];
 			try {
@@ -143,7 +143,7 @@ public class SelfElastManStart {
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
 
-					for (int i = 0; i < dataPoints.length; i++) {
+					/*for (int i = 0; i < dataPoints.length; i++) {
 						for (int j = 0; j < dataPoints[i].length; j++) {
 							if (dataPoints[i][j] != null) {
 								System.out.println("\nRead: "
@@ -160,7 +160,7 @@ public class SelfElastManStart {
 										+ dataPoints[i][j].getwQueue());
 							}
 						}
-					}
+					}*/
 				}
 				// System.out.println("\nTimer Task Finished..!%n");
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
