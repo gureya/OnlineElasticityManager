@@ -11,8 +11,8 @@ import org.apache.log4j.Logger;
  *
  */
 public class SelfElastManStart {
-	
-	//Default configurations overwritten by the config properties
+
+	// Default configurations overwritten by the config properties
 	public static int timerWindow = 5;
 	public static OnlineModelMetrics[][] dataPoints;
 	public static int scale = 50;
@@ -20,6 +20,8 @@ public class SelfElastManStart {
 	public static int maxReadTP = 500;
 	public static int maxWriteTP = 500;
 	public static int maxDataSize = 100;
+	public static double confLevel = 0.1;
+	public static int readResponseTime = 5000;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
@@ -45,6 +47,9 @@ public class SelfElastManStart {
 			maxDataSize = Integer.parseInt(properties.maxDataSize.trim());
 			scale = Integer.parseInt(properties.scale.trim());
 			queueLength = Integer.parseInt(properties.queueLength.trim());
+			confLevel = Double.parseDouble(properties.confLevel.trim());
+			readResponseTime = Integer.parseInt(properties.readResponseTime
+					.trim());
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP];
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -52,9 +57,10 @@ public class SelfElastManStart {
 		}
 
 		String message = "Config Properties: timerWindow:" + timerWindow
-				+ "\tmaxReaTP:" + maxReadTP + "\tmaxWriteTP:" + maxWriteTP
+				+ "\tmaxReadTP:" + maxReadTP + "\tmaxWriteTP:" + maxWriteTP
 				+ "\tmaxDataSize:" + maxDataSize + "\tqueueLength:"
-				+ queueLength;
+				+ queueLength + "\tconfLevel:" + confLevel
+				+ "\treadResponseTime:" + readResponseTime;
 		log.info(message);
 
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
@@ -76,7 +82,7 @@ public class SelfElastManStart {
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0; //Default
+			double dataSize = 0; // Default
 
 			DataStatistics statsArray[];
 			try {
@@ -143,7 +149,7 @@ public class SelfElastManStart {
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
 
-					/*for (int i = 0; i < dataPoints.length; i++) {
+					for (int i = 0; i < dataPoints.length; i++) {
 						for (int j = 0; j < dataPoints[i].length; j++) {
 							if (dataPoints[i][j] != null) {
 								System.out.println("\nRead: "
@@ -160,7 +166,8 @@ public class SelfElastManStart {
 										+ dataPoints[i][j].getwQueue());
 							}
 						}
-					}*/
+					}
+
 				}
 				// System.out.println("\nTimer Task Finished..!%n");
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");

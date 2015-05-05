@@ -21,6 +21,8 @@ public class Utilities {
 	String maxDataSize;
 	String scale;
 	String queueLength;
+	String confLevel;
+	String readResponseTime;
 	static Logger log = Logger.getLogger(Utilities.class);
 
 	public void getProperties() throws IOException {
@@ -44,5 +46,7 @@ public class Utilities {
 		maxDataSize = prop.getProperty("maxDataSize");
 		scale = prop.getProperty("scale");
 		queueLength = prop.getProperty("queueLength");
+		confLevel = prop.getProperty("confLevel");
+		readResponseTime = prop.getProperty("readResponseTime");
 	}
 }
