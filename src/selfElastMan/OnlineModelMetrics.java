@@ -13,7 +13,7 @@ public class OnlineModelMetrics {
 	private double rlatency; // Read latency 99th Percentile
 	private double wlatency; // Write latency
 	private boolean hasValue;
-	private boolean valid; // true = not violate sla; false = violate sla 
+	private boolean valid; // true = not violate sla; false = violate sla
 	private Queue<Integer> rQueue; // A Queue for the Read Latencies
 	private Queue<Integer> wQueue;
 
@@ -67,7 +67,7 @@ public class OnlineModelMetrics {
 	public boolean isValid() {
 		return valid;
 	}
-	
+
 	public void setValid(boolean valid) {
 		this.valid = valid;
 	}

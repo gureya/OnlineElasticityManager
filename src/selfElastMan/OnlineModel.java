@@ -3,7 +3,7 @@ package selfElastMan;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Iterator;
+
 
 import org.apache.log4j.Logger;
 
@@ -25,6 +25,7 @@ public class OnlineModel {
 		// for debugging
 		String data = "";
 		String file = "data.txt";
+		
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j] != null) {
 				// System.out
@@ -91,17 +92,18 @@ public class OnlineModel {
 				if (dataPoints[i][j].getRlatency() > SelfElastManStart.readResponseTime) {
 					dataPoints[i][j].setValid(false);
 					log.debug("This point violates the sla...");
-				}
-				else{
+				} else {
 					log.debug("This point does not violate the sla...");
 				}
 				// TODO: check same for the writes
 
 				// for debugging...print the datapoints to a file
-				int valid = (omm.isValid()) ? 1 : 0;
-				data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
-						+ omm.getDatasize() + "," + (int) omm.getRlatency()
-						+ "," + (int) omm.getWlatency() + "," + valid;
+				int valid = (dataPoints[i][j].isValid()) ? 1 : 0;
+				data = dataPoints[i][j].getrThroughput() + ","
+						+ dataPoints[i][j].getwThroughput() + ","
+						+ dataPoints[i][j].getDatasize() + ","
+						+ (int) dataPoints[i][j].getRlatency() + ","
+						+ (int) dataPoints[i][j].getWlatency() + "," + valid;
 				printtoFile(file, data);
 			}
 		}
