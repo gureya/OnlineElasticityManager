@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-
 import org.apache.log4j.Logger;
 
 /**
@@ -24,8 +23,9 @@ public class OnlineModel {
 
 		// for debugging
 		String data = "";
-		String file = "data.txt";
-		
+		String file = "new_data.txt";
+		String all_data = "repeated_data.txt";
+
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j] != null) {
 				// System.out
@@ -83,6 +83,16 @@ public class OnlineModel {
 				} else {
 					dataPoints[i][j].getwQueue().add((int) omm.getWlatency());
 				}
+
+				// for debugging...print each and every record to a file
+				// (whether new or existing)!!
+				int valid = (dataPoints[i][j].isValid()) ? 1 : 0;
+				data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
+						+ omm.getDatasize() + "," + (int) omm.getRlatency()
+						+ "," + (int) omm.getWlatency() + "," + valid + ","
+						+ dataPoints[i][j].getrQueue();
+				printtoFile(all_data, data);
+
 			} else {
 				// Add to the data points
 				log.debug("New data point,,,Adding to the datapoints");

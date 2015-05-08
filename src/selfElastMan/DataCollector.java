@@ -30,7 +30,7 @@ public class DataCollector {
 			// TODO Auto-generated catch block
 			log.info("Failed: pulling DataStatistics from the Cassandra node..."+e.getMessage());
 			//System.out.println("Failed: pulling DataStatistics from the Cassandra node..." + e.getMessage());
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 		catch (ConnectException conn){
 			log.fatal("Failed: pulling DataStatistics from the Cassandra node..."+conn.getMessage());

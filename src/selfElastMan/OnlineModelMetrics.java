@@ -7,15 +7,15 @@ import java.util.Queue;
  *
  */
 public class OnlineModelMetrics {
-	private int rThroughput;
-	private int wThroughput;
+	private int rThroughput; // Read Throughput(ops/sec)
+	private int wThroughput; // Write Throughput(ops/sec)
 	private int datasize;
-	private double rlatency; // Read latency 99th Percentile
-	private double wlatency; // Write latency
+	private double rlatency; // Read 99thPercentileLatency(us)
+	private double wlatency; // Write 99thPercentileLatency(us)
 	private boolean hasValue;
 	private boolean valid; // true = not violate sla; false = violate sla
-	private Queue<Integer> rQueue; // A Queue for the Read Latencies
-	private Queue<Integer> wQueue;
+	private Queue<Integer> rQueue; // ReadLatenciesQueue
+	private Queue<Integer> wQueue; // WriteLatenciesQueue
 
 	public OnlineModelMetrics(int rThroughput, int wThroughput, int datasize,
 			double rlatency, double wlatency, boolean hasValue,

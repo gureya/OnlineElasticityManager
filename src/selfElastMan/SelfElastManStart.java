@@ -56,11 +56,11 @@ public class SelfElastManStart {
 			e.printStackTrace();
 		}
 
-		String message = "Config Properties: timerWindow:" + timerWindow
-				+ "\tmaxReadTP:" + maxReadTP + "\tmaxWriteTP:" + maxWriteTP
-				+ "\tmaxDataSize:" + maxDataSize + "\tqueueLength:"
-				+ queueLength + "\tconfLevel:" + confLevel
-				+ "\treadResponseTime:" + readResponseTime;
+		String message = "[CONFIG PROPERTIES]: TimerWindow:" + timerWindow
+				+ "\tMaxReadTP:" + maxReadTP + "\tMaxWriteTP:" + maxWriteTP
+				+ "\tMaxDataSize:" + maxDataSize + "\tQueueLength:"
+				+ queueLength + "\tConfLevel:" + confLevel
+				+ "\tMaxReadResponseTime:" + readResponseTime;
 		log.info(message);
 
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
@@ -118,18 +118,18 @@ public class SelfElastManStart {
 					// System.out.println(" \nRead Statistics");
 					// System.out.print("\tThroughput: " + rThroughput
 					// + "\t 99th Percentile Latency: " + rPercentile);
-					log.debug("Read Statistics:\tSum: "
-							+ statsArray[0].getSum() + "\tnoRequests:"
-							+ statsArray[0].getNoRequests() + "\tThroughput: "
-							+ rThroughput + "\t 99th Percentile Latency: "
+					log.debug("[READ], \tRunTime(us), "
+							+ statsArray[0].getSum() + "\tOperations, "
+							+ statsArray[0].getNoRequests() + "\tThroughput(ops/sec)," 
+							+ rThroughput + "\t 99thPercentileLatency(us), "
 							+ rPercentile);
 
 					// System.out.println(" \nWrite Statistics");
 					// System.out.print("\tThroughput: " + wThroughput);
-					log.debug("Write Statistics:\tSum: "
-							+ statsArray[1].getSum() + "\tnoRequests:"
-							+ statsArray[1].getNoRequests() + "\tThroughput: "
-							+ wThroughput + "\t 99th Percentile Latency: "
+					log.debug("[UPDATE], \tRunTime(us), "
+							+ statsArray[1].getSum() + "\tOperations, "
+							+ statsArray[1].getNoRequests() + "\tThroughput(ops/sec), "
+							+ wThroughput + "\t 99thPercentileLatency(us), "
 							+ wPercentile);
 
 					// Test for the OnlineModel
@@ -177,7 +177,7 @@ public class SelfElastManStart {
 				// + e.getMessage());
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
-				// e.printStackTrace();
+				 e.printStackTrace();
 			}
 		}
 	}
