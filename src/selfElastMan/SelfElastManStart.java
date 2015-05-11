@@ -59,8 +59,8 @@ public class SelfElastManStart {
 		String message = "[CONFIG PROPERTIES]: TimerWindow:" + timerWindow
 				+ "\tMaxReadTP:" + maxReadTP + "\tMaxWriteTP:" + maxWriteTP
 				+ "\tMaxDataSize:" + maxDataSize + "\tQueueLength:"
-				+ queueLength + "\tConfLevel:" + confLevel
-				+ "\tMaxReadResponseTime:" + readResponseTime;
+				+ queueLength + "\tConfLevel:" + confLevel + "\tGranularity:"
+				+ scale + "\tMaxReadResponseTime:" + readResponseTime;
 		log.info(message);
 
 		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
@@ -120,17 +120,17 @@ public class SelfElastManStart {
 					// + "\t 99th Percentile Latency: " + rPercentile);
 					log.debug("[READ], \tRunTime(us), "
 							+ statsArray[0].getSum() + "\tOperations, "
-							+ statsArray[0].getNoRequests() + "\tThroughput(ops/sec)," 
-							+ rThroughput + "\t 99thPercentileLatency(us), "
-							+ rPercentile);
+							+ statsArray[0].getNoRequests()
+							+ "\tThroughput(ops/sec)," + rThroughput
+							+ "\t 99thPercentileLatency(us), " + rPercentile);
 
 					// System.out.println(" \nWrite Statistics");
 					// System.out.print("\tThroughput: " + wThroughput);
 					log.debug("[UPDATE], \tRunTime(us), "
 							+ statsArray[1].getSum() + "\tOperations, "
-							+ statsArray[1].getNoRequests() + "\tThroughput(ops/sec), "
-							+ wThroughput + "\t 99thPercentileLatency(us), "
-							+ wPercentile);
+							+ statsArray[1].getNoRequests()
+							+ "\tThroughput(ops/sec), " + wThroughput
+							+ "\t 99thPercentileLatency(us), " + wPercentile);
 
 					// Test for the OnlineModel
 					Queue<Integer> rqe = new LinkedList<Integer>();
@@ -149,24 +149,18 @@ public class SelfElastManStart {
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
 
-					/*for (int i = 0; i < dataPoints.length; i++) {
-						for (int j = 0; j < dataPoints[i].length; j++) {
-							if (dataPoints[i][j] != null) {
-								System.out.println("\nRead: "
-										+ dataPoints[i][j].getrThroughput()
-										+ "\tWrite: "
-										+ dataPoints[i][j].getwThroughput()
-										+ "\tDatasize: "
-										+ dataPoints[i][j].getDatasize()
-										+ "\tReadLatency: "
-										+ dataPoints[i][j].getRlatency()
-										+ "\tRead Queue: "
-										+ dataPoints[i][j].getrQueue()
-										+ "\tWrite Queue: "
-										+ dataPoints[i][j].getwQueue());
-							}
-						}
-					}*/
+					/*
+					 * for (int i = 0; i < dataPoints.length; i++) { for (int j
+					 * = 0; j < dataPoints[i].length; j++) { if
+					 * (dataPoints[i][j] != null) {
+					 * System.out.println("\nRead: " +
+					 * dataPoints[i][j].getrThroughput() + "\tWrite: " +
+					 * dataPoints[i][j].getwThroughput() + "\tDatasize: " +
+					 * dataPoints[i][j].getDatasize() + "\tReadLatency: " +
+					 * dataPoints[i][j].getRlatency() + "\tRead Queue: " +
+					 * dataPoints[i][j].getrQueue() + "\tWrite Queue: " +
+					 * dataPoints[i][j].getwQueue()); } } }
+					 */
 
 				}
 				// System.out.println("\nTimer Task Finished..!%n");
@@ -177,7 +171,7 @@ public class SelfElastManStart {
 				// + e.getMessage());
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
-				 e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 	}
