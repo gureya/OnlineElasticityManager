@@ -121,7 +121,7 @@ public class SelfElastManStart {
 					log.debug("[READ], \tRunTime(us), "
 							+ statsArray[0].getSum() + "\tOperations, "
 							+ statsArray[0].getNoRequests()
-							+ "\tThroughput(ops/sec)," + rThroughput
+							+ "\tThroughput(ops/sec), " + rThroughput
 							+ "\t 99thPercentileLatency(us), " + rPercentile);
 
 					// System.out.println(" \nWrite Statistics");

@@ -23,8 +23,7 @@ public class OnlineModel {
 
 		// for debugging
 		String data = "";
-		String file = "new_data.txt";
-		String all_data = "repeated_data.txt";
+		String file = "data.txt";
 
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j] != null) {
@@ -34,7 +33,7 @@ public class OnlineModel {
 				int l = 0; // keep track of the violations
 				// Update the Read Queue
 				// TODO: Move this to a function
-				if (dataPoints[i][j].getrQueue().size() > SelfElastManStart.queueLength) {
+				if (dataPoints[i][j].getrQueue().size() >= SelfElastManStart.queueLength) {
 					// Remove the first element added to the queue
 					dataPoints[i][j].getrQueue().remove();
 					// Then update the queue with the current value
@@ -75,7 +74,7 @@ public class OnlineModel {
 				// Update the Write Queue
 				// TODO: Update the sla violations for writes
 				// TODO: Move this to a function
-				if (dataPoints[i][j].getwQueue().size() > SelfElastManStart.queueLength) {
+				if (dataPoints[i][j].getwQueue().size() >= SelfElastManStart.queueLength) {
 					// Remove the first element added to the queue
 					dataPoints[i][j].getwQueue().remove();
 					// Then update the queue with the current value
@@ -91,7 +90,7 @@ public class OnlineModel {
 						+ omm.getDatasize() + "," + (int) omm.getRlatency()
 						+ "," + (int) omm.getWlatency() + "," + valid + ","
 						+ dataPoints[i][j].getrQueue();
-				printtoFile(all_data, data);
+				printtoFile(file, data);
 
 			} else {
 				// Add to the data points
@@ -113,7 +112,7 @@ public class OnlineModel {
 						+ dataPoints[i][j].getwThroughput() + ","
 						+ dataPoints[i][j].getDatasize() + ","
 						+ (int) dataPoints[i][j].getRlatency() + ","
-						+ (int) dataPoints[i][j].getWlatency() + "," + valid;
+						+ (int) dataPoints[i][j].getWlatency() + "," + valid + "," + dataPoints[i][j].getrQueue();
 				printtoFile(file, data);
 			}
 		}
