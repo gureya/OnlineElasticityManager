@@ -103,6 +103,13 @@ public class SelfElastManStart {
 					// System.out
 					// .println("No New dataStatistics found...Zero operations reported");
 				} else {
+					//My throughput calculations here
+					int roperations = (int) statsArray[0].getNoRequests();
+					rThroughput = (roperations / timerWindow);
+					
+					int woperations = (int) statsArray[1].getNoRequests();
+					wThroughput = (woperations / timerWindow);
+					
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
 

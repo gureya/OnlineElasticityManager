@@ -123,6 +123,10 @@ public class OnlineModel {
 
 		return dataPoints;
 	}
+	
+	public static void classifyDatapoints(OnlineModelMetrics[][] datapoints){
+		
+	}
 
 	// for debugging print the datapoints to a file for analysis
 	public static void printtoFile(String file, String data) {
