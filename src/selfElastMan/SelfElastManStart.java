@@ -26,6 +26,7 @@ public class SelfElastManStart {
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
 
+	//parameters for setting the datapoints grid
 	private int rstart;
 	private int wstart;
 	private int rend;
@@ -82,7 +83,7 @@ public class SelfElastManStart {
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0; // Default
+			double dataSize = 0; // Default used was ycsb's default
 
 			DataStatistics statsArray[];
 			try {
