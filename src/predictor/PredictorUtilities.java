@@ -42,6 +42,7 @@ public class PredictorUtilities {
 	// TODO: Combine the below functions into one function
 	// The loops can also be a performance bottleneck need to be eliminated
 	// Add the points to a datastructure at runtime and later convert to an array
+	
 	// Returns the read values in a multidimensional array needed by matlab
 	// scripts
 	public static double[][] getReadDatapoints(
@@ -54,6 +55,7 @@ public class PredictorUtilities {
 				for (int k = 0; k < dataPoints[i][j].length; k++) {
 						if (dataPoints[i][j][k] != null) {
 							reads[r][0] = dataPoints[i][j][k].getrThroughput();
+							r += 1;
 						}
 					}
 				}

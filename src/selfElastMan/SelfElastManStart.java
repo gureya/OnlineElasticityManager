@@ -259,6 +259,10 @@ public class SelfElastManStart {
 							}
 							rpredictedValue = PredictorUtilities
 									.mean(rcurrentPredictions);
+							// Update the previous predictions
+							System.arraycopy(rcurrentPredictions, 0,
+									rpreviousPredictions, 0,
+									rpreviousPredictions.length);
 							rinitialWeights = true;
 						} else {
 							PredictorMetrics rpm = MatlabControl.runWMA(
@@ -310,6 +314,10 @@ public class SelfElastManStart {
 							}
 							wpredictedValue = PredictorUtilities
 									.mean(wcurrentPredictions);
+							// Update the previous predictions
+							System.arraycopy(wcurrentPredictions, 0,
+									wpreviousPredictions, 0,
+									wpreviousPredictions.length);
 							winitialWeights = true;
 						} else {
 							PredictorMetrics wpm = MatlabControl.runWMA(

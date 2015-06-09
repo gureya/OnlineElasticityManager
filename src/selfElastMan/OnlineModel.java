@@ -89,7 +89,7 @@ public class OnlineModel {
 
 				// for debugging...print each and every record to a file
 				// (whether new or existing)!!
-				int valid = (dataPoints[i][j][k].isValid()) ? 1 : 0;
+				int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
 				data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
 						+ omm.getDatasize() + "," + (int) omm.getRlatency()
 						+ "," + (int) omm.getWlatency() + "," + valid + ","
