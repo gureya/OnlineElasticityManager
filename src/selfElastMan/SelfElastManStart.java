@@ -2,6 +2,7 @@ package selfElastMan;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
 
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
@@ -13,6 +14,7 @@ import org.apache.cassandra.service.DataStatistics;
 import org.apache.log4j.Logger;
 
 import predictor.MatlabControl;
+import predictor.PredictorMetrics;
 import predictor.PredictorUtilities;
 
 /**
@@ -33,16 +35,18 @@ public class SelfElastManStart {
 	public static double confLevel = 0.1;
 	public static int readResponseTime = 5000;
 
-	// Variables used by Predictor Modules
+	// Variables used by Predictor Modules (r for reads && w for writes)
 	// Initialized to the number of algorithms
 	public static final int NUM_OF_ALGS = 5;
-	public static double[] previousPredictions = new double[NUM_OF_ALGS];
+	public static double[] rpreviousPredictions = new double[NUM_OF_ALGS];
+	public static double[] wpreviousPredictions = new double[NUM_OF_ALGS];
 	public static double[] rcurrentPredictions = new double[NUM_OF_ALGS];
 	public static double[] wcurrentPredictions = new double[NUM_OF_ALGS];
-	public static boolean initialWeights = false;
-	public static HashMap<Integer, Integer> weights = new HashMap<Integer, Integer>();
+	public static boolean rinitialWeights = false;
+	public static boolean winitialWeights = false;
+	public static HashMap<Integer, Integer> rweights = new HashMap<Integer, Integer>();
+	public static HashMap<Integer, Integer> wweights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
-	public static MatlabControl matlabcontrol;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
@@ -115,7 +119,6 @@ public class SelfElastManStart {
 	class PeriodicExecutor extends TimerTask {
 		@Override
 		public void run() {
-			// System.out.println("\nTimer Task Started..!%n");
 			log.debug("Timer Task Started..!%n...Collecting Periodic Statistics");
 			double rThroughput = 0;
 			double wThroughput = 0;
@@ -124,7 +127,7 @@ public class SelfElastManStart {
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0; // Default used was ycsb's default
+			double dataSize = 0; // Variation was done using the ycsb client
 
 			DataStatistics statsArray[];
 			try {
@@ -142,8 +145,6 @@ public class SelfElastManStart {
 
 				if (rThroughput == 0 && wThroughput == 0 && dataSize == 0) {
 					log.info("No New dataStatitistics found...Zero operations reported");
-					// System.out
-					// .println("No New dataStatistics found...Zero operations reported");
 				} else {
 					// My throughput calculations here
 					int roperations = (int) statsArray[0].getNoRequests();
@@ -164,17 +165,12 @@ public class SelfElastManStart {
 					fineRead = (rstart + rend) / 2;
 					fineWrite = (wstart + wend) / 2;
 
-					// System.out.println(" \nRead Statistics");
-					// System.out.print("\tThroughput: " + rThroughput
-					// + "\t 99th Percentile Latency: " + rPercentile);
 					log.debug("[READ], \tRunTime(us), "
 							+ statsArray[0].getSum() + "\tOperations, "
 							+ statsArray[0].getNoRequests()
 							+ "\tThroughput(ops/sec), " + rThroughput
 							+ "\t 99thPercentileLatency(us), " + rPercentile);
 
-					// System.out.println(" \nWrite Statistics");
-					// System.out.print("\tThroughput: " + wThroughput);
 					log.debug("[UPDATE], \tRunTime(us), "
 							+ statsArray[1].getSum() + "\tOperations, "
 							+ statsArray[1].getNoRequests()
@@ -198,19 +194,6 @@ public class SelfElastManStart {
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
 
-					/*
-					 * for (int i = 0; i < dataPoints.length; i++) { for (int j
-					 * = 0; j < dataPoints[i].length; j++) { if
-					 * (dataPoints[i][j] != null) {
-					 * System.out.println("\nRead: " +
-					 * dataPoints[i][j].getrThroughput() + "\tWrite: " +
-					 * dataPoints[i][j].getwThroughput() + "\tDatasize: " +
-					 * dataPoints[i][j].getDatasize() + "\tReadLatency: " +
-					 * dataPoints[i][j].getRlatency() + "\tRead Queue: " +
-					 * dataPoints[i][j].getrQueue() + "\tWrite Queue: " +
-					 * dataPoints[i][j].getwQueue()); } } }
-					 */
-
 					// Test for the Predictor
 					// Get predictions for time t+1
 					// Convert reads and writes into two dimensional array to be
@@ -219,8 +202,10 @@ public class SelfElastManStart {
 					// the lowest
 					// dimension Java array that can be sent to MATLAB is a
 					// double[][]
-					double[][] reads = PredictorUtilities.getReadDatapoints(dataPoints);
-					double[][] writes = PredictorUtilities.getWriteDatapoints(dataPoints);
+					double[][] reads = PredictorUtilities
+							.getReadDatapoints(dataPoints);
+					double[][] writes = PredictorUtilities
+							.getWriteDatapoints(dataPoints);
 					// Prediction for the read throughput
 					rcurrentPredictions = MatlabControl.getPredictions(proxy,
 							dataPoints, rcurrentPredictions, reads);
@@ -230,24 +215,97 @@ public class SelfElastManStart {
 							+ rcurrentPredictions[2] + "\trt_value: "
 							+ rcurrentPredictions[3] + "\tsvm_value: "
 							+ rcurrentPredictions[4]);
-					
-					// Prediction for the write throughput
-					wcurrentPredictions = MatlabControl.getPredictions(proxy, dataPoints, wcurrentPredictions, writes);
+					// Run the Weighted Majority Algorithm(WMA) and get the
+					// predicted values
+					// The actual values for the current window : fineRead &
+					// fineWrite
+					// Initialize the weights of all predictions to 1 [mean,
+					// max, fft,
+					// reg_trees, libsvm]; Only at the beginning
+
+					// For Debugging
+					String rpp = "Read Previous Predictions: ";
+					for (int i = 0; i < rpreviousPredictions.length; i++) {
+						rpp += "\t" + rpreviousPredictions[i];
+					}
+					log.debug(rpp);
+
+					double rpredictedValue = 0;
+					if (!rinitialWeights) {
+						for (int i = 0; i < NUM_OF_ALGS; i++) {
+							rweights.put(i, 5); // Assign a five-star initially.
+												// All weights are equal
+						}
+						rpredictedValue = PredictorUtilities
+								.mean(rcurrentPredictions);
+						rinitialWeights = true;
+					} else {
+						PredictorMetrics rpm = MatlabControl.runWMA(
+								rpreviousPredictions, rcurrentPredictions,
+								rweights, fineRead);
+						rweights = rpm.getWeights();
+						rpreviousPredictions = rpm.getPreviousPredictions();
+						rpredictedValue = rpm.getPredictedValue();
+					}
+
+					// For Debugging
+					String rw = "\nWeights:";
+					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+						rw += "\t" + entry.getValue();
+					}
+					log.debug(rw);
+					log.debug("Read predicted value for time t+1: "
+							+ rpredictedValue);
+
+					// Prediction & WMA for the write throughput
+
+					// For Debugging
+					String wpp = "Write Previous Predictions: ";
+					for (int i = 0; i < wpreviousPredictions.length; i++) {
+						wpp += "\t" + wpreviousPredictions[i];
+					}
+					log.debug(wpp);
+
+					wcurrentPredictions = MatlabControl.getPredictions(proxy,
+							dataPoints, wcurrentPredictions, writes);
 					log.debug("[Write Predictions], " + "\tavg: "
 							+ wcurrentPredictions[0] + "\tmax: "
 							+ wcurrentPredictions[1] + "\tfft_value: "
 							+ wcurrentPredictions[2] + "\trt_value: "
 							+ wcurrentPredictions[3] + "\tsvm_value: "
 							+ wcurrentPredictions[4]);
-					
+					// Get the predictedValue
+					double wpredictedValue = 0;
+					if (!winitialWeights) {
+						for (int i = 0; i < NUM_OF_ALGS; i++) {
+							wweights.put(i, 5); // Assign a five-star initially.
+												// All weights are equal
+						}
+						wpredictedValue = PredictorUtilities
+								.mean(wcurrentPredictions);
+						winitialWeights = true;
+					} else {
+						PredictorMetrics wpm = MatlabControl.runWMA(
+								wpreviousPredictions, wcurrentPredictions,
+								wweights, fineWrite);
+						wweights = wpm.getWeights();
+						wpreviousPredictions = wpm.getPreviousPredictions();
+						wpredictedValue = wpm.getPredictedValue();
+					}
+
+					// For Debugging
+					String ww = "\nWeights:";
+					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+						ww += "\t" + entry.getValue();
+					}
+					log.debug(ww);
+					log.debug("Write predicted value for time t+1: "
+							+ wpredictedValue);
 
 				}
-				// System.out.println("\nTimer Task Finished..!%n");
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
 			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block
-				// System.out.println("\nTimer Task Aborted with Errors...!%n: "
-				// + e.getMessage());
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
 				e.printStackTrace();

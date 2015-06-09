@@ -1,23 +1,30 @@
 package predictor;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PredictorMetrics {
-	ArrayList<Double> reads = new ArrayList<Double>();
-	ArrayList<Double> writes = new ArrayList<Double>();
+	double[] previousPredictions;
+	HashMap<Integer, Integer> weights;
+	double predictedValue;
 
-	public PredictorMetrics(ArrayList<Double> reads, ArrayList<Double> writes) {
+	public PredictorMetrics(double[] previousPredictions,
+			HashMap<Integer, Integer> weights, double predictedValue) {
 		super();
-		this.reads = reads;
-		this.writes = writes;
+		this.previousPredictions = previousPredictions;
+		this.weights = weights;
+		this.predictedValue = predictedValue;
 	}
 
-	public ArrayList<Double> getReads() {
-		return reads;
+	public double[] getPreviousPredictions() {
+		return previousPredictions;
 	}
 
-	public ArrayList<Double> getWrites() {
-		return writes;
+	public HashMap<Integer, Integer> getWeights() {
+		return weights;
+	}
+
+	public double getPredictedValue() {
+		return predictedValue;
 	}
 
 }

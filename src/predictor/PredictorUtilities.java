@@ -1,66 +1,12 @@
 package predictor;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import selfElastMan.OnlineModelMetrics;
 
 public class PredictorUtilities {
 
-	public PredictorMetrics readDataFile() {
-		String csvFile = "/Users/GUREYA/Documents/MATLAB/Experimental-Data/data-5050V1.txt";
-		BufferedReader br = null;
-		String line = "";
-		String cvsSplitBy = ",";
-
-		ArrayList<Double> reads = new ArrayList<Double>();
-		ArrayList<Double> writes = new ArrayList<Double>();
-		try {
-
-			br = new BufferedReader(new FileReader(csvFile));
-			while ((line = br.readLine()) != null) {
-
-				// use comma as separator
-				String[] datapoint = line.split(cvsSplitBy);
-				int rth = Integer.parseInt(datapoint[0]);
-				int wth = Integer.parseInt(datapoint[1]);
-				int dsz = Integer.parseInt(datapoint[2]);
-				int rl = Integer.parseInt(datapoint[3]);
-				int slo = Integer.parseInt(datapoint[5]);
-
-				reads.add((double) rth);
-				writes.add((double) wth);
-
-				/*
-				 * System.out.println("RTH=" + datapoint[0] + " , WTH=" +
-				 * datapoint[1] + " ,RL=" + datapoint[3] + " ,SLO=" +
-				 * datapoint[5]);
-				 */
-
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		return new PredictorMetrics(reads, writes);
-
-	}
-
-	// convert Integer into int
+	// Convert an array of Integer into int
 	public double[][] convertIntegers(ArrayList<Double> integers) {
 		double[][] ret = new double[integers.size()][1];
 		for (int i = 0; i < ret.length; i++) {
@@ -69,7 +15,7 @@ public class PredictorUtilities {
 		return ret;
 	}
 
-	// ==============================Mean
+	// Get the mean of an array elements
 	public static double mean(double[] p) {
 		double sum = 0; // sum of all the elements
 		for (int i = 0; i < p.length; i++) {
@@ -78,7 +24,7 @@ public class PredictorUtilities {
 		return sum / p.length;
 	}// end method mean
 
-	// ========================Return the length of the array
+	// Return the length of the current datapoints without null ones
 	public static int arrayLength(OnlineModelMetrics[][] dataPoints) {
 		int l = 0;
 		for (int i = 0; i < dataPoints.length; i++) {
@@ -91,6 +37,8 @@ public class PredictorUtilities {
 		return l;
 	}
 
+	// Returns the read datapoints in a multidimensional array needed by matlab
+	// scripts
 	public static double[][] getReadDatapoints(OnlineModelMetrics[][] dataPoints) {
 		int r = 0;
 		double[][] reads = new double[PredictorUtilities
@@ -106,6 +54,8 @@ public class PredictorUtilities {
 		return reads;
 	}
 
+	// Returns the write datapoints in a multidimensional array needed by matlab
+	// scripts
 	public static double[][] getWriteDatapoints(
 			OnlineModelMetrics[][] dataPoints) {
 		int r = 0;

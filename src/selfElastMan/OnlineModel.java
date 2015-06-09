@@ -27,8 +27,7 @@ public class OnlineModel {
 
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j] != null) {
-				// System.out
-				// .println("\nPoint already exist,,,Just updating the respective Queues");
+				
 				log.debug("Point already exist,,,Just updating the respective Queues");
 				int l = 0; // keep track of the violations
 				// Update the Read Queue
@@ -95,7 +94,7 @@ public class OnlineModel {
 			} else {
 				// Add to the data points
 				log.debug("New data point,,,Adding to the datapoints");
-				// System.out.println("New data point,,,Adding to the datapoints");
+	
 				dataPoints[i][j] = omm;
 				// check for sla violations
 				if (dataPoints[i][j].getRlatency() > SelfElastManStart.readResponseTime) {
