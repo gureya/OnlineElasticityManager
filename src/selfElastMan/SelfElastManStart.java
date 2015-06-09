@@ -26,7 +26,7 @@ public class SelfElastManStart {
 	// Default configurations for Online Elastman overwritten by the config
 	// properties
 	public static int timerWindow = 5;
-	public static OnlineModelMetrics[][] dataPoints;
+	public static OnlineModelMetrics[][][] dataPoints;
 	public static int scale = 50;
 	public static int queueLength = 10;
 	public static int maxReadTP = 500;
@@ -51,13 +51,17 @@ public class SelfElastManStart {
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
 
-	// parameters for setting the datapoints grid
+	// parameters for setting the datapoints grid - 3D (r(reads), w(writes),
+	// d(datasize))
 	private int rstart;
 	private int wstart;
 	private int rend;
 	private int wend;
+	private int dstart;
+	private int dend;
 	private int fineRead;
 	private int fineWrite;
+	private int fineDataSize;
 
 	public SelfElastManStart(int timerWindow) {
 		timer = new Timer();
@@ -76,7 +80,7 @@ public class SelfElastManStart {
 			confLevel = Double.parseDouble(properties.confLevel.trim());
 			readResponseTime = Integer.parseInt(properties.readResponseTime
 					.trim());
-			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP];
+			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -124,10 +128,12 @@ public class SelfElastManStart {
 			double wThroughput = 0;
 			double rPercentile = 0;
 			double wPercentile = 0;
+			int roperations = 0;
+			int woperations = 0;
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0; // Variation was done using the ycsb client
+			double dataSize = 0;
 
 			DataStatistics statsArray[];
 			try {
@@ -142,19 +148,25 @@ public class SelfElastManStart {
 					wPercentile = statsArray[1].getNnPctLatency();
 				if (!Double.isNaN(statsArray[0].getDataSize()))
 					dataSize = statsArray[0].getDataSize();
+				if (!Double.isNaN(statsArray[0].getNoRequests()))
+					roperations = (int) statsArray[0].getNoRequests();
+				if (!Double.isNaN(statsArray[1].getNoRequests()))
+					woperations = (int) statsArray[1].getNoRequests();
 
-				if (rThroughput == 0 && wThroughput == 0 && dataSize == 0) {
+				if (roperations == 0 && woperations == 0) {
 					log.info("No New dataStatitistics found...Zero operations reported");
 				} else {
 					// My throughput calculations here
-					int roperations = (int) statsArray[0].getNoRequests();
 					rThroughput = (roperations / timerWindow);
 
-					int woperations = (int) statsArray[1].getNoRequests();
 					wThroughput = (woperations / timerWindow);
+
+					dataSize = 1; // Variation was done using the ycsb client,
+									// Default 1KB
 
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
+					int dsz = (int) (dataSize / scale);
 
 					rstart = rt * scale;
 					rend = rstart + scale;
@@ -162,9 +174,14 @@ public class SelfElastManStart {
 					wstart = wt * scale;
 					wend = wstart + scale;
 
+					dstart = dsz * scale;
+					dend = dstart + scale;
+
 					fineRead = (rstart + rend) / 2;
 					fineWrite = (wstart + wend) / 2;
+					fineDataSize = (dstart + dend) / 2;
 
+					log.debug("[Data Size(KB)], " + dataSize);
 					log.debug("[READ], \tRunTime(us), "
 							+ statsArray[0].getSum() + "\tOperations, "
 							+ statsArray[0].getNoRequests()
@@ -185,8 +202,8 @@ public class SelfElastManStart {
 					wqe.add((int) wPercentile); // Write Queue is not null
 
 					OnlineModelMetrics omm = new OnlineModelMetrics(fineRead,
-							fineWrite, (int) dataSize, rPercentile,
-							wPercentile, true, rqe, wqe, true);
+							fineWrite, fineDataSize, rPercentile, wPercentile,
+							true, rqe, wqe, true);
 
 					// OnlineModelMetrics[] newdataPoints = new
 					// OnlineModelMetrics[dataPoints.length];
@@ -207,22 +224,6 @@ public class SelfElastManStart {
 					double[][] writes = PredictorUtilities
 							.getWriteDatapoints(dataPoints);
 					// Prediction for the read throughput
-					rcurrentPredictions = MatlabControl.getPredictions(proxy,
-							dataPoints, rcurrentPredictions, reads);
-					log.debug("[Read Predictions], " + "\tavg: "
-							+ rcurrentPredictions[0] + "\tmax: "
-							+ rcurrentPredictions[1] + "\tfft_value: "
-							+ rcurrentPredictions[2] + "\trt_value: "
-							+ rcurrentPredictions[3] + "\tsvm_value: "
-							+ rcurrentPredictions[4]);
-					// Run the Weighted Majority Algorithm(WMA) and get the
-					// predicted values
-					// The actual values for the current window : fineRead &
-					// fineWrite
-					// Initialize the weights of all predictions to 1 [mean,
-					// max, fft,
-					// reg_trees, libsvm]; Only at the beginning
-
 					// For Debugging
 					String rpp = "Read Previous Predictions: ";
 					for (int i = 0; i < rpreviousPredictions.length; i++) {
@@ -230,33 +231,55 @@ public class SelfElastManStart {
 					}
 					log.debug(rpp);
 
-					double rpredictedValue = 0;
-					if (!rinitialWeights) {
-						for (int i = 0; i < NUM_OF_ALGS; i++) {
-							rweights.put(i, 5); // Assign a five-star initially.
-												// All weights are equal
+					// Define the threshold of read data to atleast make a
+					// prediction
+					if (reads.length > 0) {
+						rcurrentPredictions = MatlabControl.getPredictions(
+								proxy, rcurrentPredictions, reads);
+						log.debug("[Read Predictions], " + "\tavg: "
+								+ rcurrentPredictions[0] + "\tmax: "
+								+ rcurrentPredictions[1] + "\tfft_value: "
+								+ rcurrentPredictions[2] + "\trt_value: "
+								+ rcurrentPredictions[3] + "\tsvm_value: "
+								+ rcurrentPredictions[4]);
+						// Run the Weighted Majority Algorithm(WMA) and get the
+						// predicted values
+						// The actual values for the current window : fineRead &
+						// fineWrite
+						// Initialize the weights of all predictions to 1 [mean,
+						// max, fft,
+						// reg_trees, libsvm]; Only at the beginning
+
+						double rpredictedValue = 0;
+						if (!rinitialWeights) {
+							for (int i = 0; i < NUM_OF_ALGS; i++) {
+								rweights.put(i, 5); // Assign a five-star
+													// initially.
+													// All weights are equal
+							}
+							rpredictedValue = PredictorUtilities
+									.mean(rcurrentPredictions);
+							rinitialWeights = true;
+						} else {
+							PredictorMetrics rpm = MatlabControl.runWMA(
+									rpreviousPredictions, rcurrentPredictions,
+									rweights, fineRead);
+							rweights = rpm.getWeights();
+							rpreviousPredictions = rpm.getPreviousPredictions();
+							rpredictedValue = rpm.getPredictedValue();
 						}
-						rpredictedValue = PredictorUtilities
-								.mean(rcurrentPredictions);
-						rinitialWeights = true;
-					} else {
-						PredictorMetrics rpm = MatlabControl.runWMA(
-								rpreviousPredictions, rcurrentPredictions,
-								rweights, fineRead);
-						rweights = rpm.getWeights();
-						rpreviousPredictions = rpm.getPreviousPredictions();
-						rpredictedValue = rpm.getPredictedValue();
-					}
 
-					// For Debugging
-					String rw = "\nWeights:";
-					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
-						rw += "\t" + entry.getValue();
-					}
-					log.debug(rw);
-					log.debug("Read predicted value for time t+1: "
-							+ rpredictedValue);
-
+						// For Debugging
+						String rw = "\nWeights:";
+						for (Entry<Integer, Integer> entry : rweights
+								.entrySet()) {
+							rw += "\t" + entry.getValue();
+						}
+						log.debug(rw);
+						log.debug("Read predicted value for time t+1: "
+								+ rpredictedValue);
+					} else
+						log.debug("...Not enough training data available to make read predictions...");
 					// Prediction & WMA for the write throughput
 
 					// For Debugging
@@ -266,43 +289,53 @@ public class SelfElastManStart {
 					}
 					log.debug(wpp);
 
-					wcurrentPredictions = MatlabControl.getPredictions(proxy,
-							dataPoints, wcurrentPredictions, writes);
-					log.debug("[Write Predictions], " + "\tavg: "
-							+ wcurrentPredictions[0] + "\tmax: "
-							+ wcurrentPredictions[1] + "\tfft_value: "
-							+ wcurrentPredictions[2] + "\trt_value: "
-							+ wcurrentPredictions[3] + "\tsvm_value: "
-							+ wcurrentPredictions[4]);
-					// Get the predictedValue
-					double wpredictedValue = 0;
-					if (!winitialWeights) {
-						for (int i = 0; i < NUM_OF_ALGS; i++) {
-							wweights.put(i, 5); // Assign a five-star initially.
-												// All weights are equal
+					// Define the threshold of write data to atleast make a
+					// prediction
+					if (writes.length > 0) {
+						wcurrentPredictions = MatlabControl.getPredictions(
+								proxy, wcurrentPredictions, writes);
+						log.debug("[Write Predictions], " + "\tavg: "
+								+ wcurrentPredictions[0] + "\tmax: "
+								+ wcurrentPredictions[1] + "\tfft_value: "
+								+ wcurrentPredictions[2] + "\trt_value: "
+								+ wcurrentPredictions[3] + "\tsvm_value: "
+								+ wcurrentPredictions[4]);
+						// Get the predictedValue
+						double wpredictedValue = 0;
+						if (!winitialWeights) {
+							for (int i = 0; i < NUM_OF_ALGS; i++) {
+								wweights.put(i, 5); // Assign a five-star
+													// initially.
+													// All weights are equal
+							}
+							wpredictedValue = PredictorUtilities
+									.mean(wcurrentPredictions);
+							winitialWeights = true;
+						} else {
+							PredictorMetrics wpm = MatlabControl.runWMA(
+									wpreviousPredictions, wcurrentPredictions,
+									wweights, fineWrite);
+							wweights = wpm.getWeights();
+							wpreviousPredictions = wpm.getPreviousPredictions();
+							wpredictedValue = wpm.getPredictedValue();
 						}
-						wpredictedValue = PredictorUtilities
-								.mean(wcurrentPredictions);
-						winitialWeights = true;
-					} else {
-						PredictorMetrics wpm = MatlabControl.runWMA(
-								wpreviousPredictions, wcurrentPredictions,
-								wweights, fineWrite);
-						wweights = wpm.getWeights();
-						wpreviousPredictions = wpm.getPreviousPredictions();
-						wpredictedValue = wpm.getPredictedValue();
-					}
 
-					// For Debugging
-					String ww = "\nWeights:";
-					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
-						ww += "\t" + entry.getValue();
-					}
-					log.debug(ww);
-					log.debug("Write predicted value for time t+1: "
-							+ wpredictedValue);
+						// For Debugging
+						String ww = "\nWeights:";
+						for (Entry<Integer, Integer> entry : rweights
+								.entrySet()) {
+							ww += "\t" + entry.getValue();
+						}
+						log.debug(ww);
+						log.debug("Write predicted value for time t+1: "
+								+ wpredictedValue);
+					} else
+						log.debug("...Not enough training data available to make write predictions...");
 
 				}
+
+				// Get the Trained System Model
+
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
 			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block

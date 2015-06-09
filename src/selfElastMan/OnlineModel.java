@@ -16,54 +16,57 @@ public class OnlineModel {
 	// for debugging
 	private static PrintWriter out;
 
-	public static OnlineModelMetrics[][] buildModel(
-			OnlineModelMetrics[][] dataPoints, OnlineModelMetrics omm) {
+	public static OnlineModelMetrics[][][] buildModel(
+			OnlineModelMetrics[][][] dataPoints, OnlineModelMetrics omm) {
 		int i = omm.getrThroughput();
 		int j = omm.getwThroughput();
+		int k = omm.getDatasize();
 
 		// for debugging
 		String data = "";
 		String file = "data.txt";
-
+		// Assume that maximum datasize dont exceed maxReadTP or maxWriteTP
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
-			if (dataPoints[i][j] != null) {
-				
+			if (dataPoints[i][j][k] != null) {
+
 				log.debug("Point already exist,,,Just updating the respective Queues");
 				int l = 0; // keep track of the violations
 				// Update the Read Queue
 				// TODO: Move this to a function
-				if (dataPoints[i][j].getrQueue().size() >= SelfElastManStart.queueLength) {
+				if (dataPoints[i][j][k].getrQueue().size() >= SelfElastManStart.queueLength) {
 					// Remove the first element added to the queue
-					dataPoints[i][j].getrQueue().remove();
+					dataPoints[i][j][k].getrQueue().remove();
 					// Then update the queue with the current value
-					dataPoints[i][j].getrQueue().add((int) omm.getRlatency());
+					dataPoints[i][j][k].getrQueue()
+							.add((int) omm.getRlatency());
 					// Check if the point violates the sla with regard to the
 					// confLevel
-					for (Object object : dataPoints[i][j].getrQueue()) {
+					for (Object object : dataPoints[i][j][k].getrQueue()) {
 						if ((Integer) object > SelfElastManStart.readResponseTime)
 							l++;
 					}
 					double cLevel = (double) l
-							/ (double) dataPoints[i][j].getrQueue().size();
+							/ (double) dataPoints[i][j][k].getrQueue().size();
 					if (cLevel > SelfElastManStart.confLevel) {
-						dataPoints[i][j].setValid(false);
+						dataPoints[i][j][k].setValid(false);
 						log.debug("This point violates the sla...");
 					} else {
 						log.debug("This point does not violate the sla...");
 					}
 
 				} else {
-					dataPoints[i][j].getrQueue().add((int) omm.getRlatency());
+					dataPoints[i][j][k].getrQueue()
+							.add((int) omm.getRlatency());
 					// Check if the point violates the sla with regard to the
 					// confLevel
-					for (Object object : dataPoints[i][j].getrQueue()) {
+					for (Object object : dataPoints[i][j][k].getrQueue()) {
 						if ((Integer) object > SelfElastManStart.readResponseTime)
 							l++;
 					}
 					double cLevel = (double) l
-							/ (double) dataPoints[i][j].getrQueue().size();
+							/ (double) dataPoints[i][j][k].getrQueue().size();
 					if (cLevel > SelfElastManStart.confLevel) {
-						dataPoints[i][j].setValid(false);
+						dataPoints[i][j][k].setValid(false);
 						log.debug("This point violates the sla...");
 					} else {
 						log.debug("This point does not violate the sla...");
@@ -73,32 +76,34 @@ public class OnlineModel {
 				// Update the Write Queue
 				// TODO: Update the sla violations for writes
 				// TODO: Move this to a function
-				if (dataPoints[i][j].getwQueue().size() >= SelfElastManStart.queueLength) {
+				if (dataPoints[i][j][k].getwQueue().size() >= SelfElastManStart.queueLength) {
 					// Remove the first element added to the queue
-					dataPoints[i][j].getwQueue().remove();
+					dataPoints[i][j][k].getwQueue().remove();
 					// Then update the queue with the current value
-					dataPoints[i][j].getwQueue().add((int) omm.getWlatency());
+					dataPoints[i][j][k].getwQueue()
+							.add((int) omm.getWlatency());
 				} else {
-					dataPoints[i][j].getwQueue().add((int) omm.getWlatency());
+					dataPoints[i][j][k].getwQueue()
+							.add((int) omm.getWlatency());
 				}
 
 				// for debugging...print each and every record to a file
 				// (whether new or existing)!!
-				int valid = (dataPoints[i][j].isValid()) ? 1 : 0;
+				int valid = (dataPoints[i][j][k].isValid()) ? 1 : 0;
 				data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
 						+ omm.getDatasize() + "," + (int) omm.getRlatency()
 						+ "," + (int) omm.getWlatency() + "," + valid + ","
-						+ dataPoints[i][j].getrQueue();
+						+ dataPoints[i][j][k].getrQueue();
 				printtoFile(file, data);
 
 			} else {
 				// Add to the data points
 				log.debug("New data point,,,Adding to the datapoints");
-	
-				dataPoints[i][j] = omm;
+
+				dataPoints[i][j][k] = omm;
 				// check for sla violations
-				if (dataPoints[i][j].getRlatency() > SelfElastManStart.readResponseTime) {
-					dataPoints[i][j].setValid(false);
+				if (dataPoints[i][j][k].getRlatency() > SelfElastManStart.readResponseTime) {
+					dataPoints[i][j][k].setValid(false);
 					log.debug("This point violates the sla...");
 				} else {
 					log.debug("This point does not violate the sla...");
@@ -106,12 +111,13 @@ public class OnlineModel {
 				// TODO: check same for the writes
 
 				// for debugging...print the datapoints to a file
-				int valid = (dataPoints[i][j].isValid()) ? 1 : 0;
-				data = dataPoints[i][j].getrThroughput() + ","
-						+ dataPoints[i][j].getwThroughput() + ","
-						+ dataPoints[i][j].getDatasize() + ","
-						+ (int) dataPoints[i][j].getRlatency() + ","
-						+ (int) dataPoints[i][j].getWlatency() + "," + valid + "," + dataPoints[i][j].getrQueue();
+				int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
+				data = dataPoints[i][j][k].getrThroughput() + ","
+						+ dataPoints[i][j][k].getwThroughput() + ","
+						+ dataPoints[i][j][k].getDatasize() + ","
+						+ (int) dataPoints[i][j][k].getRlatency() + ","
+						+ (int) dataPoints[i][j][k].getWlatency() + "," + valid
+						+ "," + dataPoints[i][j][k].getrQueue();
 				printtoFile(file, data);
 			}
 		}
@@ -122,9 +128,9 @@ public class OnlineModel {
 
 		return dataPoints;
 	}
-	
-	public static void classifyDatapoints(OnlineModelMetrics[][] datapoints){
-		
+
+	public static void getUpdatedModel(OnlineModelMetrics[][] datapoints) {
+
 	}
 
 	// for debugging print the datapoints to a file for analysis

@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import selfElastMan.OnlineModelMetrics;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.extensions.MatlabNumericArray;
@@ -17,54 +16,50 @@ public class MatlabControl {
 	static Logger log = Logger.getLogger(MatlabControl.class);
 
 	public static double[] getPredictions(MatlabProxy proxy,
-			OnlineModelMetrics[][] dataPoints, double[] currentPredictions,
-			double[][] predictionData) throws MatlabInvocationException {
+			double[] currentPredictions, double[][] predictionData)
+			throws MatlabInvocationException {
 		long start = System.nanoTime();
 
-		System.out.println(PredictorUtilities.arrayLength(dataPoints));
-		if (predictionData.length > 0) {
-			// For testing purposes - Generate a time series
-			double[][] timeseries = new double[predictionData.length][1];
-			double k = 0;
-			for (int i = 0; i < predictionData.length; i++) {
-				timeseries[i][0] = k;
-				k += 10;
-			}
+		// For testing purposes - Generate a time series
+		double[][] timeseries = new double[predictionData.length][1];
+		double k = 0;
+		for (int i = 0; i < predictionData.length; i++) {
+			timeseries[i][0] = k;
+			k += 10;
+		}
 
-			double nextWindow = (timeseries[timeseries.length - 1][0] + 10);
-			log.debug("[Next_WINDOW], " + nextWindow);
+		double nextWindow = (timeseries[timeseries.length - 1][0] + 10);
+		log.debug("[Next_WINDOW], " + nextWindow);
 
-			proxy.setVariable("nextWindow", nextWindow);
+		proxy.setVariable("nextWindow", nextWindow);
 
-			MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
-			processor.setNumericArray("reads", new MatlabNumericArray(
-					predictionData, null));
-			processor.setNumericArray("timeseries", new MatlabNumericArray(
-					timeseries, null));
+		MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
+		processor.setNumericArray("reads", new MatlabNumericArray(
+				predictionData, null));
+		processor.setNumericArray("timeseries", new MatlabNumericArray(
+				timeseries, null));
 
-			// Add your scripts to Matlab path
-			proxy.eval("addpath('/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor')");
+		// Add your scripts to Matlab path
+		proxy.eval("addpath('/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor')");
 
-			// Execute the prediction algorithms in Matlab via the proxy
-			proxy.eval("[avg] = average(reads)");
-			proxy.eval("[maxima] = maximum(reads)");
-			proxy.eval("[fft_value, pattern] = fft_func(reads)");
-			proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)");
-			proxy.eval("[svm_value, accuracy, decision_values] = svm(timeseries, reads, nextWindow)");
+		// Execute the prediction algorithms in Matlab via the proxy
+		proxy.eval("[avg] = average(reads)");
+		proxy.eval("[maxima] = maximum(reads)");
+		proxy.eval("[fft_value, pattern] = fft_func(reads)");
+		proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)");
+		proxy.eval("[svm_value, accuracy, decision_values] = svm(timeseries, reads, nextWindow)");
 
-			// Get the current predictions for time t+1; order:[mean, max, fft,
-			// reg_trees, libsvm]
-			currentPredictions[0] = ((double[]) proxy.getVariable("avg"))[0];
-			currentPredictions[1] = ((double[]) proxy.getVariable("maxima"))[0];
-			currentPredictions[2] = ((double[]) proxy.getVariable("fft_value"))[0];
-			currentPredictions[3] = ((double[]) proxy.getVariable("rt_value"))[0];
-			currentPredictions[4] = ((double[]) proxy.getVariable("svm_value"))[0];
+		// Get the current predictions for time t+1; order:[mean, max, fft,
+		// reg_trees, libsvm]
+		currentPredictions[0] = ((double[]) proxy.getVariable("avg"))[0];
+		currentPredictions[1] = ((double[]) proxy.getVariable("maxima"))[0];
+		currentPredictions[2] = ((double[]) proxy.getVariable("fft_value"))[0];
+		currentPredictions[3] = ((double[]) proxy.getVariable("rt_value"))[0];
+		currentPredictions[4] = ((double[]) proxy.getVariable("svm_value"))[0];
 
-			// Time it takes to execute all the scripts
-			log.debug("Elapsed Time(ms) for prediction: "
-					+ +(System.nanoTime() - start) / 1000000);
-		} else
-			log.debug("...Not enough training data available to make predictions...");
+		// Time it takes to execute all the scripts
+		log.debug("Elapsed Time(ms) for prediction: "
+				+ +(System.nanoTime() - start) / 1000000);
 		return currentPredictions;
 	}
 
