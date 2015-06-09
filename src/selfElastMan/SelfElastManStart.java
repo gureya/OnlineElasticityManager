@@ -13,6 +13,7 @@ import org.apache.cassandra.service.DataStatistics;
 import org.apache.log4j.Logger;
 
 import predictor.MatlabControl;
+import predictor.PredictorUtilities;
 
 /**
  * @author GUREYA
@@ -36,7 +37,8 @@ public class SelfElastManStart {
 	// Initialized to the number of algorithms
 	public static final int NUM_OF_ALGS = 5;
 	public static double[] previousPredictions = new double[NUM_OF_ALGS];
-	public static double[] currentPredictions = new double[NUM_OF_ALGS];
+	public static double[] rcurrentPredictions = new double[NUM_OF_ALGS];
+	public static double[] wcurrentPredictions = new double[NUM_OF_ALGS];
 	public static boolean initialWeights = false;
 	public static HashMap<Integer, Integer> weights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
@@ -211,8 +213,33 @@ public class SelfElastManStart {
 
 					// Test for the Predictor
 					// Get predictions for time t+1
-					currentPredictions = MatlabControl.getPredictions(proxy,
-							dataPoints, currentPredictions);
+					// Convert reads and writes into two dimensional array to be
+					// sent to the matlab scripts
+					// Arrays in MATLAB are always at least two dimensions, so
+					// the lowest
+					// dimension Java array that can be sent to MATLAB is a
+					// double[][]
+					double[][] reads = PredictorUtilities.getReadDatapoints(dataPoints);
+					double[][] writes = PredictorUtilities.getWriteDatapoints(dataPoints);
+					// Prediction for the read throughput
+					rcurrentPredictions = MatlabControl.getPredictions(proxy,
+							dataPoints, rcurrentPredictions, reads);
+					log.debug("[Read Predictions], " + "\tavg: "
+							+ rcurrentPredictions[0] + "\tmax: "
+							+ rcurrentPredictions[1] + "\tfft_value: "
+							+ rcurrentPredictions[2] + "\trt_value: "
+							+ rcurrentPredictions[3] + "\tsvm_value: "
+							+ rcurrentPredictions[4]);
+					
+					// Prediction for the write throughput
+					wcurrentPredictions = MatlabControl.getPredictions(proxy, dataPoints, wcurrentPredictions, writes);
+					log.debug("[Write Predictions], " + "\tavg: "
+							+ wcurrentPredictions[0] + "\tmax: "
+							+ wcurrentPredictions[1] + "\tfft_value: "
+							+ wcurrentPredictions[2] + "\trt_value: "
+							+ wcurrentPredictions[3] + "\tsvm_value: "
+							+ wcurrentPredictions[4]);
+					
 
 				}
 				// System.out.println("\nTimer Task Finished..!%n");
