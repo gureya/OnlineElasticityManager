@@ -3,8 +3,16 @@ package selfElastMan;
 import java.io.*;
 import java.util.*;
 
+import matlabcontrol.MatlabConnectionException;
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxyFactory;
+import matlabcontrol.MatlabProxyFactoryOptions;
+
 import org.apache.cassandra.service.DataStatistics;
 import org.apache.log4j.Logger;
+
+import predictor.MatlabControl;
 
 /**
  * @author GUREYA
@@ -12,7 +20,8 @@ import org.apache.log4j.Logger;
  */
 public class SelfElastManStart {
 
-	// Default configurations overwritten by the config properties
+	// Default configurations for Online Elastman overwritten by the config
+	// properties
 	public static int timerWindow = 5;
 	public static OnlineModelMetrics[][] dataPoints;
 	public static int scale = 50;
@@ -23,10 +32,20 @@ public class SelfElastManStart {
 	public static double confLevel = 0.1;
 	public static int readResponseTime = 5000;
 
+	// Variables used by Predictor Modules
+	// Initialized to the number of algorithms
+	public static final int NUM_OF_ALGS = 5;
+	public static double[] previousPredictions = new double[NUM_OF_ALGS];
+	public static double[] currentPredictions = new double[NUM_OF_ALGS];
+	public static boolean initialWeights = false;
+	public static HashMap<Integer, Integer> weights = new HashMap<Integer, Integer>();
+	public static MatlabProxy proxy;
+	public static MatlabControl matlabcontrol;
+
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
 
-	//parameters for setting the datapoints grid
+	// parameters for setting the datapoints grid
 	private int rstart;
 	private int wstart;
 	private int rend;
@@ -34,7 +53,7 @@ public class SelfElastManStart {
 	private int fineRead;
 	private int fineWrite;
 
-	public SelfElastManStart(int seconds) {
+	public SelfElastManStart(int timerWindow) {
 		timer = new Timer();
 		log.info("Starting the Autonomic Controller...");
 
@@ -64,11 +83,31 @@ public class SelfElastManStart {
 				+ scale + "\tMaxReadResponseTime:" + readResponseTime;
 		log.info(message);
 
-		timer.schedule(new PeriodicExecutor(), 0, seconds * 1000);
+		try {
+			startMatlabControl();
+			log.info("MatlabControl successfully instantiated...");
+		} catch (MatlabConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			log.fatal("Failed instantiating the MatlabControl...");
+		}
+
+		timer.schedule(new PeriodicExecutor(), 0, timerWindow * 1000);
 	}
 
 	public static void main(String[] args) throws IOException {
 		new SelfElastManStart(timerWindow);
+	}
+
+	public static void startMatlabControl() throws MatlabConnectionException {
+		// Set the matlab factory setting from opening every now and again
+		MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
+				.setUsePreviouslyControlledSession(true).setHidden(true)
+				.setMatlabLocation(null).build();
+
+		// Create a proxy, which we will use to control MATLAB
+		MatlabProxyFactory factory = new MatlabProxyFactory(options);
+		proxy = factory.getProxy();
 	}
 
 	class PeriodicExecutor extends TimerTask {
@@ -104,13 +143,13 @@ public class SelfElastManStart {
 					// System.out
 					// .println("No New dataStatistics found...Zero operations reported");
 				} else {
-					//My throughput calculations here
+					// My throughput calculations here
 					int roperations = (int) statsArray[0].getNoRequests();
 					rThroughput = (roperations / timerWindow);
-					
+
 					int woperations = (int) statsArray[1].getNoRequests();
 					wThroughput = (woperations / timerWindow);
-					
+
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
 
@@ -140,7 +179,7 @@ public class SelfElastManStart {
 							+ "\tThroughput(ops/sec), " + wThroughput
 							+ "\t 99thPercentileLatency(us), " + wPercentile);
 
-					// Test for the OnlineModel
+					// Test for the OnlineModel --- Updating the Online Model
 					Queue<Integer> rqe = new LinkedList<Integer>();
 					Queue<Integer> wqe = new LinkedList<Integer>();
 
@@ -170,10 +209,15 @@ public class SelfElastManStart {
 					 * dataPoints[i][j].getwQueue()); } } }
 					 */
 
+					// Test for the Predictor
+					// Get predictions for time t+1
+					currentPredictions = MatlabControl.getPredictions(proxy,
+							dataPoints, currentPredictions);
+
 				}
 				// System.out.println("\nTimer Task Finished..!%n");
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException e) {
+			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block
 				// System.out.println("\nTimer Task Aborted with Errors...!%n: "
 				// + e.getMessage());

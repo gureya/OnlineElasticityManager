@@ -5,11 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-public class Utilities {
+import selfElastMan.OnlineModelMetrics;
 
-	public DataFormat readDataFile() {
+public class PredictorUtilities {
+
+	public PredictorMetrics readDataFile() {
 		String csvFile = "/Users/GUREYA/Documents/MATLAB/Experimental-Data/data-5050V1.txt";
 		BufferedReader br = null;
 		String line = "";
@@ -55,7 +56,7 @@ public class Utilities {
 			}
 		}
 
-		return new DataFormat(reads, writes);
+		return new PredictorMetrics(reads, writes);
 	
 	}
 	
@@ -71,14 +72,27 @@ public class Utilities {
 	}
 	
 	//==============================Mean
-	public double mean(double[] p) {
+	public static double mean(double[] p) {
 	    double sum = 0;  // sum of all the elements
 	    for (int i=0; i<p.length; i++) {
 	        sum += p[i];
 	    }
 	    return sum / p.length;
 	}//end method mean
-
+	
+	//========================Return the length of the array
+	public static int arrayLength(OnlineModelMetrics[][] dataPoints)
+	{
+		int l = 0;
+		for (int i = 0; i < dataPoints.length; i++) {
+			for (int j = 0; j < dataPoints[i].length; j++) {
+				if (dataPoints[i][j] != null) {
+					l += 1;
+				}
+			}
+		}
+		return l;
+	}
 
 }
 
