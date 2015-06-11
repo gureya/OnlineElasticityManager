@@ -1,7 +1,7 @@
 /**
  * 
  */
-package selfElastMan;
+package onlineelastman;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package selfElastMan;
+package onlineelastman;
 
 import java.io.*;
 import java.util.*;
@@ -13,6 +13,7 @@ import matlabcontrol.MatlabProxyFactoryOptions;
 import org.apache.cassandra.service.DataStatistics;
 import org.apache.log4j.Logger;
 
+import actuator.Actuator;
 import predictor.MatlabControl;
 import predictor.PredictorMetrics;
 import predictor.PredictorUtilities;
@@ -48,6 +49,9 @@ public class SelfElastManStart {
 	public static HashMap<Integer, Integer> wweights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
 
+	// Variables used by the Actuator
+	public static int NUMBER_OF_SERVERS;
+
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
 
@@ -63,9 +67,9 @@ public class SelfElastManStart {
 	private int fineWrite;
 	private int fineDataSize;
 
-	public SelfElastManStart(int timerWindow) {
+	public SelfElastManStart(int timerWindow) throws MatlabInvocationException {
 		timer = new Timer();
-		log.info("Starting the Autonomic Controller...");
+		log.info("Starting the Online Autonomic Controller...");
 
 		// Read from the config properties if any
 		Utilities properties = new Utilities();
@@ -105,11 +109,13 @@ public class SelfElastManStart {
 		timer.schedule(new PeriodicExecutor(), 0, timerWindow * 1000);
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException,
+			MatlabInvocationException {
 		new SelfElastManStart(timerWindow);
 	}
 
-	public static void startMatlabControl() throws MatlabConnectionException {
+	public static void startMatlabControl() throws MatlabConnectionException,
+			MatlabInvocationException {
 		// Set the matlab factory setting from opening every now and again
 		MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
 				.setUsePreviouslyControlledSession(true).setHidden(true)
@@ -118,6 +124,9 @@ public class SelfElastManStart {
 		// Create a proxy, which we will use to control MATLAB
 		MatlabProxyFactory factory = new MatlabProxyFactory(options);
 		proxy = factory.getProxy();
+
+		// Add your scripts to Matlab path
+		proxy.eval("addpath('/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor')");
 	}
 
 	class PeriodicExecutor extends TimerTask {
@@ -223,6 +232,10 @@ public class SelfElastManStart {
 							.getReadDatapoints(dataPoints);
 					double[][] writes = PredictorUtilities
 							.getWriteDatapoints(dataPoints);
+					double[][] dszs = PredictorUtilities
+							.getDataSizeDatapoints(dataPoints);
+					double[][] trainingLabels = PredictorUtilities
+							.getTrainingLabels(dataPoints);
 					// Prediction for the read throughput
 					// For Debugging
 					String rpp = "Read Previous Predictions: ";
@@ -233,6 +246,7 @@ public class SelfElastManStart {
 
 					// Define the threshold of read data to atleast make a
 					// prediction
+					double rpredictedValue = 0;
 					if (reads.length > 0) {
 						rcurrentPredictions = MatlabControl.getPredictions(
 								proxy, rcurrentPredictions, reads);
@@ -250,7 +264,6 @@ public class SelfElastManStart {
 						// max, fft,
 						// reg_trees, libsvm]; Only at the beginning
 
-						double rpredictedValue = 0;
 						if (!rinitialWeights) {
 							for (int i = 0; i < NUM_OF_ALGS; i++) {
 								rweights.put(i, 5); // Assign a five-star
@@ -295,6 +308,7 @@ public class SelfElastManStart {
 
 					// Define the threshold of write data to atleast make a
 					// prediction
+					double wpredictedValue = 0;
 					if (writes.length > 0) {
 						wcurrentPredictions = MatlabControl.getPredictions(
 								proxy, wcurrentPredictions, writes);
@@ -305,7 +319,6 @@ public class SelfElastManStart {
 								+ wcurrentPredictions[3] + "\tsvm_value: "
 								+ wcurrentPredictions[4]);
 						// Get the predictedValue
-						double wpredictedValue = 0;
 						if (!winitialWeights) {
 							for (int i = 0; i < NUM_OF_ALGS; i++) {
 								wweights.put(i, 5); // Assign a five-star
@@ -340,9 +353,25 @@ public class SelfElastManStart {
 					} else
 						log.debug("...Not enough training data available to make write predictions...");
 
-				}
+					// Testing the trained system model
+					// At least determine a threshold for the training data to
+					// get the system model
+					if (reads.length > 0) {
 
-				// Get the Trained System Model
+						// Get the primal variables w, b from the model
+						double[] primalVariables = OnlineModel.getUpdatedModel(
+								proxy, reads, writes, dszs, trainingLabels);
+
+						// Get the current number of servers
+						int NEW_NUMBER_OF_SERVERS = Actuator
+								.getNewNumberOfServers(primalVariables,
+										rpredictedValue, wpredictedValue,
+										NUMBER_OF_SERVERS);
+						log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+
+					} else
+						log.debug("...Not enough training data available to get the current system model...");
+				}
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
 			} catch (IOException | MatlabInvocationException e) {

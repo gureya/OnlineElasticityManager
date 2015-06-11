@@ -1,4 +1,4 @@
-package selfElastMan;
+package onlineelastman;
 
 import java.util.Queue;
 
@@ -68,7 +68,40 @@ public class OnlineModelMetrics {
 		return valid;
 	}
 
+	// The setters are needed if you have a warm data
 	public void setValid(boolean valid) {
 		this.valid = valid;
+	}
+
+	public void setrThroughput(int rThroughput) {
+		this.rThroughput = rThroughput;
+	}
+
+	public void setwThroughput(int wThroughput) {
+		this.wThroughput = wThroughput;
+	}
+
+	public void setDatasize(int datasize) {
+		this.datasize = datasize;
+	}
+
+	public void setRlatency(double rlatency) {
+		this.rlatency = rlatency;
+	}
+
+	public void setWlatency(double wlatency) {
+		this.wlatency = wlatency;
+	}
+
+	public void setHasValue(boolean hasValue) {
+		this.hasValue = hasValue;
+	}
+
+	public void setrQueue(Queue<Integer> rQueue) {
+		this.rQueue = rQueue;
+	}
+
+	public void setwQueue(Queue<Integer> wQueue) {
+		this.wQueue = wQueue;
 	}
 }

@@ -1,8 +1,13 @@
-package selfElastMan;
+package onlineelastman;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.extensions.MatlabNumericArray;
+import matlabcontrol.extensions.MatlabTypeConverter;
 
 import org.apache.log4j.Logger;
 
@@ -129,7 +134,29 @@ public class OnlineModel {
 		return dataPoints;
 	}
 
-	public static void getUpdatedModel(OnlineModelMetrics[][] datapoints) {
+	public static double[] getUpdatedModel(MatlabProxy proxy, double[][] reads,
+			double[][] writes, double[][] dszs, double[][] trainingLabels)
+			throws MatlabInvocationException {
+
+		double[] primalVariables = new double[4];
+
+		MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
+		processor.setNumericArray("reads", new MatlabNumericArray(reads, null));
+		processor.setNumericArray("writes",
+				new MatlabNumericArray(writes, null));
+		processor.setNumericArray("dszs", new MatlabNumericArray(dszs, null));
+		processor.setNumericArray("trainingLabels", new MatlabNumericArray(
+				trainingLabels, null));
+
+		// Execute system_model.m script to get the updated system model
+		proxy.eval("[w, b] = system_model(reads, writes, dszs, trainingLabels)");
+
+		primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1
+		primalVariables[1] = ((double[]) proxy.getVariable("w"))[1]; // w2
+		primalVariables[2] = ((double[]) proxy.getVariable("w"))[2]; // w3
+		primalVariables[3] = ((double[]) proxy.getVariable("b"))[0]; // b
+
+		return primalVariables;
 
 	}
 

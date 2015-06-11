@@ -39,9 +39,6 @@ public class MatlabControl {
 		processor.setNumericArray("timeseries", new MatlabNumericArray(
 				timeseries, null));
 
-		// Add your scripts to Matlab path
-		proxy.eval("addpath('/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor')");
-
 		// Execute the prediction algorithms in Matlab via the proxy
 		proxy.eval("[avg] = average(reads)");
 		proxy.eval("[maxima] = maximum(reads)");

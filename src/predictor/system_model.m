@@ -6,6 +6,8 @@ function[ w, b ] = system_model( feature1, feature2, feature3, trainlabels )
 % -s 0 : classification
 % -t 0 : linear kernel
 % -c somenumber : set the cost
+% The parameter C in the SVM optimiztion problem is a positive cost factor
+% that penelizes misclassified training examples. A larger C discourages misclassification more than a smaller C. 
 % WARNING: using -h 0 may be faster
 
 trainfeatures = [feature1,feature2,feature3];
