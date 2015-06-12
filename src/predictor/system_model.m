@@ -22,6 +22,8 @@ b = -model.rho;
 if (model.Label(1) == -1)
     w = -w; b = -b;
 end
+w = round(w, 4);
+b = round(b, 4);
 end
     
     

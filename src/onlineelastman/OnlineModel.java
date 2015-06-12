@@ -30,6 +30,7 @@ public class OnlineModel {
 		// for debugging
 		String data = "";
 		String file = "data.txt";
+		
 		// Assume that maximum datasize dont exceed maxReadTP or maxWriteTP
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j][k] != null) {
@@ -150,17 +151,19 @@ public class OnlineModel {
 
 		// Execute system_model.m script to get the updated system model
 		proxy.eval("[w, b] = system_model(reads, writes, dszs, trainingLabels)");
+		
+        //Get the primal variables in 3-D space
 
-		primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1
+		primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1 
 		primalVariables[1] = ((double[]) proxy.getVariable("w"))[1]; // w2
 		primalVariables[2] = ((double[]) proxy.getVariable("w"))[2]; // w3
 		primalVariables[3] = ((double[]) proxy.getVariable("b"))[0]; // b
-
+		
 		return primalVariables;
 
 	}
 
-	// for debugging print the datapoints to a file for analysis
+	// for debugging print the datapoints to a file for analysis (all the changes taking place in a datapoint)
 	public static void printtoFile(String file, String data) {
 
 		try {
@@ -174,5 +177,4 @@ public class OnlineModel {
 		}
 		out.close(); // Important otherwise nothing will be written to the file
 	}
-
 }

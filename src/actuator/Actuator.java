@@ -1,6 +1,9 @@
 package actuator;
 
+import org.apache.log4j.Logger;
+
 public class Actuator {
+	static Logger log = Logger.getLogger(Actuator.class);
 
 	public static int getNewNumberOfServers(double[] primalVariables,
 			double rpredictedValue, double wpredictedValue,
@@ -11,7 +14,9 @@ public class Actuator {
 		// System model
 		double w1 = primalVariables[0];
 		double w2 = primalVariables[1];
+		double w3 = primalVariables[2];
 		double b = primalVariables[3];
+		log.debug("[SYSTEM PRIMAL VARIABLES]\tw1 " + w1 + "\tw2 " + w2 + "\tw3 " + w3 + "\tb " + b);
 		// Equation y = (-1/w2)*(w1*x + b);
 
 		// Get the equation of your current point connected to

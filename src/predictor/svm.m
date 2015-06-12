@@ -14,6 +14,7 @@ function [ predicted_value, accuracy, decision_values ] = svm( dColumn1, dColumn
     y = (0)';          % data to be predicted
 
     [predicted_value, accuracy, decision_values] = svmpredict(x, y, model);
+    predicted_value = round(predicted_value);
     
 end
 

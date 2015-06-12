@@ -100,11 +100,40 @@ public class SelfElastManStart {
 		try {
 			startMatlabControl();
 			log.info("MatlabControl successfully instantiated...");
-		} catch (MatlabConnectionException e) {
-			// TODO Auto-generated catch block
+		} catch (MatlabConnectionException e) { // TODO Auto-generated catch
+												// block
 			e.printStackTrace();
 			log.fatal("Failed instantiating the MatlabControl...");
 		}
+
+		// /Testing the warm up phase
+		PredictorUtilities pu = new PredictorUtilities();
+		dataPoints = pu.readDataFile(dataPoints);
+		for (int i = 0; i < dataPoints.length; i++) {
+			for (int j = 0; j < dataPoints[i].length; j++) {
+				for (int k = 0; k < dataPoints[i][j].length; k++) {
+					if (dataPoints[i][j][k] != null) {
+						int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
+						String data = dataPoints[i][j][k].getrThroughput() + ","
+								+ dataPoints[i][j][k].getwThroughput() + ","
+								+ dataPoints[i][j][k].getDatasize() + ","
+								+ (int) dataPoints[i][j][k].getRlatency() + ","
+								+ (int) dataPoints[i][j][k].getWlatency() + "," + valid
+								+ "," + dataPoints[i][j][k].getrQueue();
+						System.out.println(data);
+						OnlineModel.printtoFile("dataFile.txt", data);
+					}
+				}
+			}
+		}
+		
+		// Testing the prediction and System Model on warm up data
+		pu.testPredictorSystemModel(dataPoints, rpreviousPredictions,
+				wpreviousPredictions, rcurrentPredictions, wcurrentPredictions,
+				proxy, rinitialWeights, winitialWeights, rweights, wweights,
+				NUMBER_OF_SERVERS, NUM_OF_ALGS, 245, 245);
+
+		System.exit(0);
 
 		timer.schedule(new PeriodicExecutor(), 0, timerWindow * 1000);
 	}
@@ -367,7 +396,8 @@ public class SelfElastManStart {
 								.getNewNumberOfServers(primalVariables,
 										rpredictedValue, wpredictedValue,
 										NUMBER_OF_SERVERS);
-						log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+						log.debug("[NEW_NUMBER_OF_SERVERS], "
+								+ NEW_NUMBER_OF_SERVERS);
 
 					} else
 						log.debug("...Not enough training data available to get the current system model...");
