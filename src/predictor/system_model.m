@@ -1,4 +1,4 @@
-function[ w, b ] = system_model( feature1, feature2, feature3, trainlabels )
+function[ w, b, xmin, xmax ] = system_model( feature1, feature2, feature3, trainlabels )
 % Train the model and get the primal variables w, b from the model
 % Credits to this tutorial
 % http://openclassroom.stanford.edu/MainFolder/DocumentPage.php?course=MachineLearning&doc=exercises/ex7/ex7.html&quot
@@ -14,6 +14,9 @@ trainfeatures = [feature1,feature2,feature3];
 
 X = trainfeatures;
 y = trainlabels;
+
+xmin = min(X(:,1));
+xmax = max(X(:,1));
 
 model = svmtrain(y, X, '-s 0 -t 0 -c 1 -h 0');
 

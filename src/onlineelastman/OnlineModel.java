@@ -139,7 +139,7 @@ public class OnlineModel {
 			double[][] writes, double[][] dszs, double[][] trainingLabels)
 			throws MatlabInvocationException {
 
-		double[] primalVariables = new double[4];
+		double[] primalVariables = new double[6];
 
 		MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
 		processor.setNumericArray("reads", new MatlabNumericArray(reads, null));
@@ -150,14 +150,16 @@ public class OnlineModel {
 				trainingLabels, null));
 
 		// Execute system_model.m script to get the updated system model
-		proxy.eval("[w, b] = system_model(reads, writes, dszs, trainingLabels)");
+		proxy.eval("[w, b, xmin, xmax] = system_model(reads, writes, dszs, trainingLabels)");
 		
-        //Get the primal variables in 3-D space
+        //Get the primal variables in 3-D space + xmin & xmax
 
 		primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1 
 		primalVariables[1] = ((double[]) proxy.getVariable("w"))[1]; // w2
 		primalVariables[2] = ((double[]) proxy.getVariable("w"))[2]; // w3
 		primalVariables[3] = ((double[]) proxy.getVariable("b"))[0]; // b
+		primalVariables[4] = ((double[]) proxy.getVariable("xmin"))[0]; // xmin
+		primalVariables[5] = ((double[]) proxy.getVariable("xmax"))[0]; // xmax
 		
 		return primalVariables;
 

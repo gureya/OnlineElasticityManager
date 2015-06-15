@@ -127,7 +127,7 @@ public class SelfElastManStart {
 			}
 		}
 		
-		// Testing the prediction and System Model on warm up data
+		// Testing the prediction and System Model on warm up data/Existing data
 		pu.testPredictorSystemModel(dataPoints, rpreviousPredictions,
 				wpreviousPredictions, rcurrentPredictions, wcurrentPredictions,
 				proxy, rinitialWeights, winitialWeights, rweights, wweights,
@@ -395,7 +395,7 @@ public class SelfElastManStart {
 						int NEW_NUMBER_OF_SERVERS = Actuator
 								.getNewNumberOfServers(primalVariables,
 										rpredictedValue, wpredictedValue,
-										NUMBER_OF_SERVERS);
+										NUMBER_OF_SERVERS, dataSize);
 						log.debug("[NEW_NUMBER_OF_SERVERS], "
 								+ NEW_NUMBER_OF_SERVERS);
 

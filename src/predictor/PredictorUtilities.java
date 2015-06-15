@@ -209,6 +209,7 @@ public class PredictorUtilities {
 		// the lowest
 		// dimension Java array that can be sent to MATLAB is a
 		// double[][]
+		double datasize = 1;
 		double[][] reads = PredictorUtilities.getReadDatapoints(dataPoints);
 		double[][] writes = PredictorUtilities.getWriteDatapoints(dataPoints);
 		double[][] dszs = PredictorUtilities.getDataSizeDatapoints(dataPoints);
@@ -335,7 +336,7 @@ public class PredictorUtilities {
 			// Get the current number of servers
 			int NEW_NUMBER_OF_SERVERS = Actuator.getNewNumberOfServers(
 					primalVariables, rpredictedValue, wpredictedValue,
-					NUMBER_OF_SERVERS);
+					NUMBER_OF_SERVERS, datasize);
 			log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
 
 		} else
