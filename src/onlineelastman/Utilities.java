@@ -23,6 +23,7 @@ public class Utilities {
 	String queueLength;
 	String confLevel;
 	String readResponseTime;
+	String matlabPath;
 	static Logger log = Logger.getLogger(Utilities.class);
 
 	public void getProperties() throws IOException {
@@ -48,5 +49,6 @@ public class Utilities {
 		queueLength = prop.getProperty("queueLength");
 		confLevel = prop.getProperty("confLevel");
 		readResponseTime = prop.getProperty("readResponseTime");
+		matlabPath = prop.getProperty("matlabPath");
 	}
 }

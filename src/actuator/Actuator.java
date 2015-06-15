@@ -23,10 +23,15 @@ public class Actuator {
 
 		double xx0 = xmin;
 		double xx1 = xmax;
-		double yy0 = (1 / w2) * ((-w1 * xx0) - b);
-		double yy1 = (1 / w2) * ((-w1 * xx1) - b);
-		double zz0 = (1 / w3) * ((-w1 * xx0) - (-w2 * yy0) - b);
-		double zz1 = (1 / w3) * ((-w1 * xx1) - (-w2 * yy1) - b);
+		double zz0 = currentDatasize;
+		double zz1 = currentDatasize;
+
+		// double yy0 = (1 / w2) * ((-w1 * xx0) - b);
+		// double yy1 = (1 / w2) * ((-w1 * xx1) - b);
+		double yy0 = (1 / w2) * ((-w1 * xx0) - (-w3 * zz0) - b);
+		double yy1 = (1 / w2) * ((-w1 * xx1) - (-w3 * zz1) - b);
+		// double zz0 = (1 / w3) * ((-w1 * xx0) - (-w2 * yy0) - b);
+		// double zz1 = (1 / w3) * ((-w1 * xx1) - (-w2 * yy1) - b);
 
 		double k0 = (xx1 - xx0);
 		double k1 = (yy1 - yy0);

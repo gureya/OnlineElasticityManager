@@ -34,6 +34,7 @@ public class SelfElastManStart {
 	public static int maxWriteTP = 500;
 	public static int maxDataSize = 100;
 	public static double confLevel = 0.1;
+	public static String matlabPath = "/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor";
 	public static int readResponseTime = 5000;
 
 	// Variables used by Predictor Modules (r for reads && w for writes)
@@ -50,7 +51,7 @@ public class SelfElastManStart {
 	public static MatlabProxy proxy;
 
 	// Variables used by the Actuator
-	public static int NUMBER_OF_SERVERS;
+	public static int NUMBER_OF_SERVERS = 1;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
@@ -84,6 +85,7 @@ public class SelfElastManStart {
 			confLevel = Double.parseDouble(properties.confLevel.trim());
 			readResponseTime = Integer.parseInt(properties.readResponseTime
 					.trim());
+			matlabPath = properties.matlabPath;
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -106,7 +108,7 @@ public class SelfElastManStart {
 			log.fatal("Failed instantiating the MatlabControl...");
 		}
 
-		// /Testing the warm up phase
+		// /Testing the warm up phase // Testing the system with an existing data
 		PredictorUtilities pu = new PredictorUtilities();
 		dataPoints = pu.readDataFile(dataPoints);
 		for (int i = 0; i < dataPoints.length; i++) {
@@ -120,8 +122,8 @@ public class SelfElastManStart {
 								+ (int) dataPoints[i][j][k].getRlatency() + ","
 								+ (int) dataPoints[i][j][k].getWlatency() + "," + valid
 								+ "," + dataPoints[i][j][k].getrQueue();
-						System.out.println(data);
-						OnlineModel.printtoFile("dataFile.txt", data);
+						//System.out.println(data);
+						//OnlineModel.printtoFile("dataFile.txt", data);
 					}
 				}
 			}
@@ -155,7 +157,8 @@ public class SelfElastManStart {
 		proxy = factory.getProxy();
 
 		// Add your scripts to Matlab path
-		proxy.eval("addpath('/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor')");
+		proxy.setVariable("matlabPath", matlabPath);
+		proxy.eval("addpath(matlabPath)");
 	}
 
 	class PeriodicExecutor extends TimerTask {
