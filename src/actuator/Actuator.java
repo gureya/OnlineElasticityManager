@@ -132,10 +132,10 @@ public class Actuator {
 		}
 
 		try {
-			_process = Runtime
-					.getRuntime()
-					.exec(SelfElastManStart.actuatorScriptsPath+"/removeInstances.sh "
-							+ args);
+			String command = SelfElastManStart.actuatorScriptsPath
+					+ "/removeInstances.sh" + args;
+			log.debug("[Command to Execute], " + command);
+			_process = Runtime.getRuntime().exec(command);
 			// ... don't forget to initialise in, out, and error,
 			// .... and consume the streams in separate threads!
 			_process.waitFor();
@@ -190,10 +190,9 @@ public class Actuator {
 		}
 
 		try {
-			_process = Runtime
-					.getRuntime()
-					.exec(SelfElastManStart.actuatorScriptsPath+"/addInstances.sh "
-							+ args);
+			String command = SelfElastManStart.actuatorScriptsPath
+					+ "/addInstances.sh" + args;
+			_process = Runtime.getRuntime().exec(command);
 			// ... don't forget to initialise in, out, and error,
 			// .... and consume the streams in separate threads!
 			_process.waitFor();
