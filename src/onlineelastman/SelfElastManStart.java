@@ -34,7 +34,8 @@ public class SelfElastManStart {
 	public static int maxWriteTP = 500;
 	public static int maxDataSize = 100;
 	public static double confLevel = 0.1;
-	public static String matlabPath = "/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor";
+	public static String matlabPath = "/home/ubuntu/ElasticityManager/src/predictor";
+	public static String actuatorScriptsPath = "/home/ubuntu/ElasticityManager/src/actuator";
 	public static int readResponseTime = 5000;
 
 	// Variables used by Predictor Modules (r for reads && w for writes)
@@ -86,6 +87,8 @@ public class SelfElastManStart {
 			readResponseTime = Integer.parseInt(properties.readResponseTime
 					.trim());
 			matlabPath = properties.matlabPath;
+			actuatorScriptsPath = properties.actuatorScriptsPath;
+			//Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -108,34 +111,33 @@ public class SelfElastManStart {
 			log.fatal("Failed instantiating the MatlabControl...");
 		}
 
-		// /Testing the warm up phase // Testing the system with an existing data
+		// /Testing the warm up phase // Testing the system with an existing
+		// data
 		PredictorUtilities pu = new PredictorUtilities();
 		dataPoints = pu.readDataFile(dataPoints);
-		for (int i = 0; i < dataPoints.length; i++) {
-			for (int j = 0; j < dataPoints[i].length; j++) {
-				for (int k = 0; k < dataPoints[i][j].length; k++) {
-					if (dataPoints[i][j][k] != null) {
-						int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
-						String data = dataPoints[i][j][k].getrThroughput() + ","
-								+ dataPoints[i][j][k].getwThroughput() + ","
-								+ dataPoints[i][j][k].getDatasize() + ","
-								+ (int) dataPoints[i][j][k].getRlatency() + ","
-								+ (int) dataPoints[i][j][k].getWlatency() + "," + valid
-								+ "," + dataPoints[i][j][k].getrQueue();
-						//System.out.println(data);
-						//OnlineModel.printtoFile("dataFile.txt", data);
-					}
-				}
-			}
-		}
-		
-		// Testing the prediction and System Model on warm up data/Existing data
-		pu.testPredictorSystemModel(dataPoints, rpreviousPredictions,
-				wpreviousPredictions, rcurrentPredictions, wcurrentPredictions,
-				proxy, rinitialWeights, winitialWeights, rweights, wweights,
-				NUMBER_OF_SERVERS, NUM_OF_ALGS, 245, 245);
+		/*
+		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
+		 * dataPoints[i].length; j++) { for (int k = 0; k <
+		 * dataPoints[i][j].length; k++) { if (dataPoints[i][j][k] != null) {
+		 * int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1; String data =
+		 * dataPoints[i][j][k].getrThroughput() + "," +
+		 * dataPoints[i][j][k].getwThroughput() + "," +
+		 * dataPoints[i][j][k].getDatasize() + "," + (int)
+		 * dataPoints[i][j][k].getRlatency() + "," + (int)
+		 * dataPoints[i][j][k].getWlatency() + "," + valid + "," +
+		 * dataPoints[i][j][k].getrQueue(); // System.out.println(data); //
+		 * OnlineModel.printtoFile("dataFile.txt", data); } } } }
+		 */
 
-		System.exit(0);
+		/*
+		 * // Testing the prediction and System Model on warm up data/Existing
+		 * data pu.testPredictorSystemModel(dataPoints, rpreviousPredictions,
+		 * wpreviousPredictions, rcurrentPredictions, wcurrentPredictions,
+		 * proxy, rinitialWeights, winitialWeights, rweights, wweights,
+		 * NUMBER_OF_SERVERS, NUM_OF_ALGS, 245, 245);
+		 * 
+		 * System.exit(0);
+		 */
 
 		timer.schedule(new PeriodicExecutor(), 0, timerWindow * 1000);
 	}
@@ -158,6 +160,7 @@ public class SelfElastManStart {
 
 		// Add your scripts to Matlab path
 		proxy.setVariable("matlabPath", matlabPath);
+		log.debug("[MatlabPath], " + matlabPath);
 		proxy.eval("addpath(matlabPath)");
 	}
 
@@ -174,7 +177,7 @@ public class SelfElastManStart {
 
 			// Average dataSize Need to find a way to get from the Cassandra
 			// Cluster!
-			double dataSize = 0;
+			double dataSize = 1;
 
 			DataStatistics statsArray[];
 			try {
@@ -194,6 +197,8 @@ public class SelfElastManStart {
 				if (!Double.isNaN(statsArray[1].getNoRequests()))
 					woperations = (int) statsArray[1].getNoRequests();
 
+				dataSize = 1; // Variation was done using the ycsb client,
+								// Default 1KB
 				if (roperations == 0 && woperations == 0) {
 					log.info("No New dataStatitistics found...Zero operations reported");
 				} else {
@@ -201,9 +206,6 @@ public class SelfElastManStart {
 					rThroughput = (roperations / timerWindow);
 
 					wThroughput = (woperations / timerWindow);
-
-					dataSize = 1; // Variation was done using the ycsb client,
-									// Default 1KB
 
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
@@ -251,163 +253,192 @@ public class SelfElastManStart {
 					dataPoints = OnlineModel.buildModel(dataPoints, omm);
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
-
-					// Test for the Predictor
-					// Get predictions for time t+1
-					// Convert reads and writes into two dimensional array to be
-					// sent to the matlab scripts
-					// Arrays in MATLAB are always at least two dimensions, so
-					// the lowest
-					// dimension Java array that can be sent to MATLAB is a
-					// double[][]
-					double[][] reads = PredictorUtilities
-							.getReadDatapoints(dataPoints);
-					double[][] writes = PredictorUtilities
-							.getWriteDatapoints(dataPoints);
-					double[][] dszs = PredictorUtilities
-							.getDataSizeDatapoints(dataPoints);
-					double[][] trainingLabels = PredictorUtilities
-							.getTrainingLabels(dataPoints);
-					// Prediction for the read throughput
-					// For Debugging
-					String rpp = "Read Previous Predictions: ";
-					for (int i = 0; i < rpreviousPredictions.length; i++) {
-						rpp += "\t" + rpreviousPredictions[i];
-					}
-					log.debug(rpp);
-
-					// Define the threshold of read data to atleast make a
-					// prediction
-					double rpredictedValue = 0;
-					if (reads.length > 0) {
-						rcurrentPredictions = MatlabControl.getPredictions(
-								proxy, rcurrentPredictions, reads);
-						log.debug("[Read Predictions], " + "\tavg: "
-								+ rcurrentPredictions[0] + "\tmax: "
-								+ rcurrentPredictions[1] + "\tfft_value: "
-								+ rcurrentPredictions[2] + "\trt_value: "
-								+ rcurrentPredictions[3] + "\tsvm_value: "
-								+ rcurrentPredictions[4]);
-						// Run the Weighted Majority Algorithm(WMA) and get the
-						// predicted values
-						// The actual values for the current window : fineRead &
-						// fineWrite
-						// Initialize the weights of all predictions to 1 [mean,
-						// max, fft,
-						// reg_trees, libsvm]; Only at the beginning
-
-						if (!rinitialWeights) {
-							for (int i = 0; i < NUM_OF_ALGS; i++) {
-								rweights.put(i, 5); // Assign a five-star
-													// initially.
-													// All weights are equal
-							}
-							rpredictedValue = PredictorUtilities
-									.mean(rcurrentPredictions);
-							// Update the previous predictions
-							System.arraycopy(rcurrentPredictions, 0,
-									rpreviousPredictions, 0,
-									rpreviousPredictions.length);
-							rinitialWeights = true;
-						} else {
-							PredictorMetrics rpm = MatlabControl.runWMA(
-									rpreviousPredictions, rcurrentPredictions,
-									rweights, fineRead);
-							rweights = rpm.getWeights();
-							rpreviousPredictions = rpm.getPreviousPredictions();
-							rpredictedValue = rpm.getPredictedValue();
-						}
-
-						// For Debugging
-						String rw = "\nWeights:";
-						for (Entry<Integer, Integer> entry : rweights
-								.entrySet()) {
-							rw += "\t" + entry.getValue();
-						}
-						log.debug(rw);
-						log.debug("Read predicted value for time t+1: "
-								+ rpredictedValue);
-					} else
-						log.debug("...Not enough training data available to make read predictions...");
-					// Prediction & WMA for the write throughput
-
-					// For Debugging
-					String wpp = "Write Previous Predictions: ";
-					for (int i = 0; i < wpreviousPredictions.length; i++) {
-						wpp += "\t" + wpreviousPredictions[i];
-					}
-					log.debug(wpp);
-
-					// Define the threshold of write data to atleast make a
-					// prediction
-					double wpredictedValue = 0;
-					if (writes.length > 0) {
-						wcurrentPredictions = MatlabControl.getPredictions(
-								proxy, wcurrentPredictions, writes);
-						log.debug("[Write Predictions], " + "\tavg: "
-								+ wcurrentPredictions[0] + "\tmax: "
-								+ wcurrentPredictions[1] + "\tfft_value: "
-								+ wcurrentPredictions[2] + "\trt_value: "
-								+ wcurrentPredictions[3] + "\tsvm_value: "
-								+ wcurrentPredictions[4]);
-						// Get the predictedValue
-						if (!winitialWeights) {
-							for (int i = 0; i < NUM_OF_ALGS; i++) {
-								wweights.put(i, 5); // Assign a five-star
-													// initially.
-													// All weights are equal
-							}
-							wpredictedValue = PredictorUtilities
-									.mean(wcurrentPredictions);
-							// Update the previous predictions
-							System.arraycopy(wcurrentPredictions, 0,
-									wpreviousPredictions, 0,
-									wpreviousPredictions.length);
-							winitialWeights = true;
-						} else {
-							PredictorMetrics wpm = MatlabControl.runWMA(
-									wpreviousPredictions, wcurrentPredictions,
-									wweights, fineWrite);
-							wweights = wpm.getWeights();
-							wpreviousPredictions = wpm.getPreviousPredictions();
-							wpredictedValue = wpm.getPredictedValue();
-						}
-
-						// For Debugging
-						String ww = "\nWeights:";
-						for (Entry<Integer, Integer> entry : rweights
-								.entrySet()) {
-							ww += "\t" + entry.getValue();
-						}
-						log.debug(ww);
-						log.debug("Write predicted value for time t+1: "
-								+ wpredictedValue);
-					} else
-						log.debug("...Not enough training data available to make write predictions...");
-
-					// Testing the trained system model
-					// At least determine a threshold for the training data to
-					// get the system model
-					if (reads.length > 0) {
-
-						// Get the primal variables w, b from the model
-						double[] primalVariables = OnlineModel.getUpdatedModel(
-								proxy, reads, writes, dszs, trainingLabels);
-
-						// Get the current number of servers
-						int NEW_NUMBER_OF_SERVERS = Actuator
-								.getNewNumberOfServers(primalVariables,
-										rpredictedValue, wpredictedValue,
-										NUMBER_OF_SERVERS, dataSize);
-						log.debug("[NEW_NUMBER_OF_SERVERS], "
-								+ NEW_NUMBER_OF_SERVERS);
-
-					} else
-						log.debug("...Not enough training data available to get the current system model...");
 				}
 
+				// Test for the Predictor
+				// Get predictions for time t+1
+				// Convert reads and writes into two dimensional array to be
+				// sent to the matlab scripts
+				// Arrays in MATLAB are always at least two dimensions, so
+				// the lowest
+				// dimension Java array that can be sent to MATLAB is a
+				// double[][]
+				double[][] reads = PredictorUtilities
+						.getReadDatapoints(dataPoints);
+				double[][] writes = PredictorUtilities
+						.getWriteDatapoints(dataPoints);
+				double[][] dszs = PredictorUtilities
+						.getDataSizeDatapoints(dataPoints);
+				double[][] trainingLabels = PredictorUtilities
+						.getTrainingLabels(dataPoints);
+				// Prediction for the read throughput
+				// For Debugging
+				String rpp = "Read Previous Predictions: ";
+				for (int i = 0; i < rpreviousPredictions.length; i++) {
+					rpp += "\t" + rpreviousPredictions[i];
+				}
+				log.debug(rpp);
+
+				// Define the threshold of read data to atleast make a
+				// prediction
+				double rpredictedValue = 0;
+				if (reads.length > 0) {
+					rcurrentPredictions = MatlabControl.getPredictions(proxy,
+							rcurrentPredictions, reads);
+					log.debug("[Read Predictions], " + "\tavg: "
+							+ rcurrentPredictions[0] + "\tmax: "
+							+ rcurrentPredictions[1] + "\tfft_value: "
+							+ rcurrentPredictions[2] + "\trt_value: "
+							+ rcurrentPredictions[3] + "\tsvm_value: "
+							+ rcurrentPredictions[4]);
+					// Run the Weighted Majority Algorithm(WMA) and get the
+					// predicted values
+					// The actual values for the current window : fineRead &
+					// fineWrite
+					// Initialize the weights of all predictions to 1 [mean,
+					// max, fft,
+					// reg_trees, libsvm]; Only at the beginning
+
+					if (!rinitialWeights) {
+						for (int i = 0; i < NUM_OF_ALGS; i++) {
+							rweights.put(i, 5); // Assign a five-star
+												// initially.
+												// All weights are equal
+						}
+						rpredictedValue = PredictorUtilities
+								.mean(rcurrentPredictions);
+						// Update the previous predictions
+						System.arraycopy(rcurrentPredictions, 0,
+								rpreviousPredictions, 0,
+								rpreviousPredictions.length);
+						rinitialWeights = true;
+					} else {
+						PredictorMetrics rpm = MatlabControl.runWMA(
+								rpreviousPredictions, rcurrentPredictions,
+								rweights, fineRead);
+						rweights = rpm.getWeights();
+						rpreviousPredictions = rpm.getPreviousPredictions();
+						rpredictedValue = rpm.getPredictedValue();
+					}
+
+					// For Debugging
+					String rw = "\nWeights:";
+					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+						rw += "\t" + entry.getValue();
+					}
+					log.debug(rw);
+					log.debug("Read predicted value for time t+1: "
+							+ rpredictedValue);
+				} else
+					log.debug("...Not enough training data available to make read predictions...");
+				// Prediction & WMA for the write throughput
+
+				// For Debugging
+				String wpp = "Write Previous Predictions: ";
+				for (int i = 0; i < wpreviousPredictions.length; i++) {
+					wpp += "\t" + wpreviousPredictions[i];
+				}
+				log.debug(wpp);
+
+				// Define the threshold of write data to atleast make a
+				// prediction
+				double wpredictedValue = 0;
+				if (writes.length > 0) {
+					wcurrentPredictions = MatlabControl.getPredictions(proxy,
+							wcurrentPredictions, writes);
+					log.debug("[Write Predictions], " + "\tavg: "
+							+ wcurrentPredictions[0] + "\tmax: "
+							+ wcurrentPredictions[1] + "\tfft_value: "
+							+ wcurrentPredictions[2] + "\trt_value: "
+							+ wcurrentPredictions[3] + "\tsvm_value: "
+							+ wcurrentPredictions[4]);
+					// Get the predictedValue
+					if (!winitialWeights) {
+						for (int i = 0; i < NUM_OF_ALGS; i++) {
+							wweights.put(i, 5); // Assign a five-star
+												// initially.
+												// All weights are equal
+						}
+						wpredictedValue = PredictorUtilities
+								.mean(wcurrentPredictions);
+						// Update the previous predictions
+						System.arraycopy(wcurrentPredictions, 0,
+								wpreviousPredictions, 0,
+								wpreviousPredictions.length);
+						winitialWeights = true;
+					} else {
+						PredictorMetrics wpm = MatlabControl.runWMA(
+								wpreviousPredictions, wcurrentPredictions,
+								wweights, fineWrite);
+						wweights = wpm.getWeights();
+						wpreviousPredictions = wpm.getPreviousPredictions();
+						wpredictedValue = wpm.getPredictedValue();
+					}
+
+					// For Debugging
+					String ww = "\nWeights:";
+					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+						ww += "\t" + entry.getValue();
+					}
+					log.debug(ww);
+					log.debug("Write predicted value for time t+1: "
+							+ wpredictedValue);
+				} else
+					log.debug("...Not enough training data available to make write predictions...");
+
+				// Testing the trained system model
+				// At least determine a threshold for the training data to
+				// get the system model
+				int extraServers = 0;
+				if (reads.length > 0) {
+
+					// Get the primal variables w, b from the model
+					double[] primalVariables = OnlineModel.getUpdatedModel(
+							proxy, reads, writes, dszs, trainingLabels);
+
+					// Get the extra number of servers needed
+					extraServers = Actuator.getExtraNumberOfServers(
+							primalVariables, rpredictedValue, wpredictedValue,
+							NUMBER_OF_SERVERS, dataSize);
+
+				} else
+					log.debug("...Not enough training data available to get the current system model...");
+
+				// Testing the Actuator module
+				// Get the all the available nodes in the cluster and determine
+				// which to commission or decommission
+				HashMap<String, Integer> nodesMap = new HashMap<String, Integer>();
+				nodesMap = Actuator.getCassandraInstances();
+
+				if (extraServers < 0) { // Decommission the extra number of
+										// servers
+					ArrayList<String> nodesToDecommission = Actuator
+							.getNodesToDecommission(nodesMap, extraServers);
+					if(nodesToDecommission != null){
+					log.debug("Starting decommissionig " + extraServers
+							+ " servers");
+					Actuator.decommissionInstances(nodesToDecommission);
+					}
+					else
+						log.debug("No enough instances to carry out actuation");
+				}
+				else if (extraServers > 0) {
+					ArrayList<String> nodesToCommission = Actuator
+							.getNodesToCommission(nodesMap, extraServers);
+					if(nodesToCommission != null){
+					log.debug("Starting Commissionig " + extraServers
+							+ " servers");
+					Actuator.commissionInstances(nodesToCommission);
+					}
+					else
+						log.debug("No enough instances to carry out Commissioning");
+				} else
+					log.debug("Cassandra Cluster at its optimal performance, No actuation required");
+				// TODO update the nodesMap after commission or decommission
+
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException e) {
+			} catch (IOException | MatlabInvocationException
+					| InterruptedException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());

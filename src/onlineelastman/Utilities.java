@@ -24,6 +24,8 @@ public class Utilities {
 	String confLevel;
 	String readResponseTime;
 	String matlabPath;
+	String actuatorScriptsPath;
+	
 	static Logger log = Logger.getLogger(Utilities.class);
 
 	public void getProperties() throws IOException {
@@ -50,5 +52,6 @@ public class Utilities {
 		confLevel = prop.getProperty("confLevel");
 		readResponseTime = prop.getProperty("readResponseTime");
 		matlabPath = prop.getProperty("matlabPath");
+		actuatorScriptsPath = prop.getProperty("actuatorScriptsPath");
 	}
 }
