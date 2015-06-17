@@ -69,6 +69,11 @@ public class SelfElastManStart {
 	private int fineWrite;
 	private int fineDataSize;
 
+	// for testing and debugging prediction
+	public double rpredictedValue = 0;
+	public double wpredictedValue = 0;
+	long global_timeseries_counter = 0;
+
 	public SelfElastManStart(int timerWindow) throws MatlabInvocationException {
 		timer = new Timer();
 		log.info("Starting the Online Autonomic Controller...");
@@ -88,7 +93,7 @@ public class SelfElastManStart {
 					.trim());
 			matlabPath = properties.matlabPath;
 			actuatorScriptsPath = properties.actuatorScriptsPath;
-			//Initialize the datapoint grids
+			// Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -113,8 +118,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		PredictorUtilities pu = new PredictorUtilities();
-		dataPoints = pu.readDataFile(dataPoints);
+		//PredictorUtilities pu = new PredictorUtilities();
+		//dataPoints = pu.readDataFile(dataPoints);
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
 		 * dataPoints[i].length; j++) { for (int k = 0; k <
@@ -263,6 +268,18 @@ public class SelfElastManStart {
 				// the lowest
 				// dimension Java array that can be sent to MATLAB is a
 				// double[][]
+
+				// Print prediction data into a file for analysis
+				// counter,realRead,predictedRead,realWrite,predictedWrite
+				String pfile = "pdata.txt";
+				String pdata = "";
+
+				pdata = global_timeseries_counter + "," + fineRead + ","
+						+ rpredictedValue + "," + fineWrite + ","
+						+ wpredictedValue;
+				OnlineModel.printtoFile(pfile, pdata);
+				global_timeseries_counter += 1;
+
 				double[][] reads = PredictorUtilities
 						.getReadDatapoints(dataPoints);
 				double[][] writes = PredictorUtilities
@@ -281,7 +298,6 @@ public class SelfElastManStart {
 
 				// Define the threshold of read data to atleast make a
 				// prediction
-				double rpredictedValue = 0;
 				if (reads.length > 0) {
 					rcurrentPredictions = MatlabControl.getPredictions(proxy,
 							rcurrentPredictions, reads);
@@ -342,7 +358,6 @@ public class SelfElastManStart {
 
 				// Define the threshold of write data to atleast make a
 				// prediction
-				double wpredictedValue = 0;
 				if (writes.length > 0) {
 					wcurrentPredictions = MatlabControl.getPredictions(proxy,
 							wcurrentPredictions, writes);
@@ -414,23 +429,20 @@ public class SelfElastManStart {
 										// servers
 					ArrayList<String> nodesToDecommission = Actuator
 							.getNodesToDecommission(nodesMap, extraServers);
-					if(nodesToDecommission != null){
-					log.debug("Starting decommissionig " + extraServers
-							+ " servers");
-					Actuator.decommissionInstances(nodesToDecommission);
-					}
-					else
+					if (nodesToDecommission != null) {
+						log.debug("Starting decommissionig " + extraServers
+								+ " servers");
+						Actuator.decommissionInstances(nodesToDecommission);
+					} else
 						log.debug("No enough instances to carry out actuation");
-				}
-				else if (extraServers > 0) {
+				} else if (extraServers > 0) {
 					ArrayList<String> nodesToCommission = Actuator
 							.getNodesToCommission(nodesMap, extraServers);
-					if(nodesToCommission != null){
-					log.debug("Starting Commissionig " + extraServers
-							+ " servers");
-					Actuator.commissionInstances(nodesToCommission);
-					}
-					else
+					if (nodesToCommission != null) {
+						log.debug("Starting Commissionig " + extraServers
+								+ " servers");
+						Actuator.commissionInstances(nodesToCommission);
+					} else
 						log.debug("No enough instances to carry out Commissioning");
 				} else
 					log.debug("Cassandra Cluster at its optimal performance, No actuation required");

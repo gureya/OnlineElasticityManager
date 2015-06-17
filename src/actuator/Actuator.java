@@ -171,6 +171,7 @@ public class Actuator {
 				close(_process.getOutputStream());
 				close(_process.getInputStream());
 				_process.destroy();
+				log.debug("[Process Exit Status], "+_process.exitValue());
 			}
 			close(_in);
 			close(_out);
@@ -229,6 +230,7 @@ public class Actuator {
 				close(_process.getOutputStream());
 				close(_process.getInputStream());
 				_process.destroy();
+				log.debug("[Process Exit Status], "+_process.exitValue());
 			}
 			close(_in);
 			close(_out);
