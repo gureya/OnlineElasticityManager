@@ -25,6 +25,7 @@ public class Utilities {
 	String readResponseTime;
 	String matlabPath;
 	String actuatorScriptsPath;
+	String targetThroughput;
 	
 	static Logger log = Logger.getLogger(Utilities.class);
 
@@ -53,5 +54,6 @@ public class Utilities {
 		readResponseTime = prop.getProperty("readResponseTime");
 		matlabPath = prop.getProperty("matlabPath");
 		actuatorScriptsPath = prop.getProperty("actuatorScriptsPath");
+		targetThroughput = prop.getProperty("targetThroughput");
 	}
 }

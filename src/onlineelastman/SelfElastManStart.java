@@ -37,6 +37,7 @@ public class SelfElastManStart {
 	public static String matlabPath = "/home/ubuntu/ElasticityManager/src/predictor";
 	public static String actuatorScriptsPath = "/home/ubuntu/ElasticityManager/src/actuator";
 	public static int readResponseTime = 5000;
+	public static int targetThroughput = 1000; // target throughput per server
 
 	// Variables used by Predictor Modules (r for reads && w for writes)
 	// Initialized to the number of algorithms
@@ -93,6 +94,8 @@ public class SelfElastManStart {
 					.trim());
 			matlabPath = properties.matlabPath;
 			actuatorScriptsPath = properties.actuatorScriptsPath;
+			targetThroughput = Integer.parseInt(properties.targetThroughput);
+
 			// Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 		} catch (IOException e) {
@@ -118,8 +121,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		//PredictorUtilities pu = new PredictorUtilities();
-		//dataPoints = pu.readDataFile(dataPoints);
+		// PredictorUtilities pu = new PredictorUtilities();
+		// dataPoints = pu.readDataFile(dataPoints);
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
 		 * dataPoints[i].length; j++) { for (int k = 0; k <
@@ -392,7 +395,7 @@ public class SelfElastManStart {
 
 					// For Debugging
 					String ww = "\nWeights:";
-					for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+					for (Entry<Integer, Integer> entry : wweights.entrySet()) {
 						ww += "\t" + entry.getValue();
 					}
 					log.debug(ww);
@@ -401,7 +404,7 @@ public class SelfElastManStart {
 				} else
 					log.debug("...Not enough training data available to make write predictions...");
 
-				// Testing the trained system model
+				/*// Testing the trained system model
 				// At least determine a threshold for the training data to
 				// get the system model
 				int extraServers = 0;
@@ -445,12 +448,11 @@ public class SelfElastManStart {
 					} else
 						log.debug("No enough instances to carry out Commissioning");
 				} else
-					log.debug("Cassandra Cluster at its optimal performance, No actuation required");
+					log.debug("Cassandra Cluster at its optimal performance, No actuation required");*/
 				// TODO update the nodesMap after commission or decommission
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException
-					| InterruptedException e) {
+			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());

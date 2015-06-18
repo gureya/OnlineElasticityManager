@@ -109,6 +109,7 @@ public class Actuator {
 																// server
 		// TODO Set a threshold to only trigger actuation if
 		// there is a large change in throughput
+		// Use the known target throughput per server to determine this
 
 		// Calculate the new number of servers
 		NEW_NUMBER_OF_SERVERS = (int) (predictedTotalThroughtput / optimizedThroughput);
@@ -171,7 +172,7 @@ public class Actuator {
 				close(_process.getOutputStream());
 				close(_process.getInputStream());
 				_process.destroy();
-				log.debug("[Process Exit Status], "+_process.exitValue());
+				log.debug("[Process Exit Status], " + _process.exitValue());
 			}
 			close(_in);
 			close(_out);
@@ -230,7 +231,7 @@ public class Actuator {
 				close(_process.getOutputStream());
 				close(_process.getInputStream());
 				_process.destroy();
-				log.debug("[Process Exit Status], "+_process.exitValue());
+				log.debug("[Process Exit Status], " + _process.exitValue());
 			}
 			close(_in);
 			close(_out);
