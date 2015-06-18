@@ -18,7 +18,6 @@ public class MatlabControl {
 	public static double[] getPredictions(MatlabProxy proxy,
 			double[] currentPredictions, double[][] predictionData)
 			throws MatlabInvocationException {
-		long start = System.nanoTime();
 
 		// For testing purposes - Generate a time series
 		double[][] timeseries = new double[predictionData.length][1];
@@ -53,10 +52,7 @@ public class MatlabControl {
 		currentPredictions[2] = ((double[]) proxy.getVariable("fft_value"))[0];
 		currentPredictions[3] = ((double[]) proxy.getVariable("rt_value"))[0];
 		currentPredictions[4] = ((double[]) proxy.getVariable("svm_value"))[0];
-
-		// Time it takes to execute all the scripts
-		log.debug("Elapsed Time(ms) for prediction: "
-				+ +(System.nanoTime() - start) / 1000000);
+		
 		return currentPredictions;
 	}
 

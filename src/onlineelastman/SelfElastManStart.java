@@ -94,7 +94,8 @@ public class SelfElastManStart {
 					.trim());
 			matlabPath = properties.matlabPath;
 			actuatorScriptsPath = properties.actuatorScriptsPath;
-			targetThroughput = Integer.parseInt(properties.targetThroughput.trim());
+			targetThroughput = Integer.parseInt(properties.targetThroughput
+					.trim());
 			SelfElastManStart.timerWindow = timerWindow;
 
 			// Initialize the datapoint grids
@@ -212,7 +213,11 @@ public class SelfElastManStart {
 					log.info("No New dataStatitistics found...Zero operations reported");
 				} else {
 					// My throughput calculations here
-					System.out.println("Timer Window just before calculating throughput: "+timerWindow);
+					/*
+					 * System.out
+					 * .println("Timer Window just before calculating throughput: "
+					 * + timerWindow);
+					 */
 					rThroughput = (roperations / timerWindow);
 
 					wThroughput = (woperations / timerWindow);
@@ -265,6 +270,7 @@ public class SelfElastManStart {
 					// dataPoints.length);
 				}
 
+				long start = System.nanoTime();
 				// Test for the Predictor
 				// Get predictions for time t+1
 				// Convert reads and writes into two dimensional array to be
@@ -406,51 +412,52 @@ public class SelfElastManStart {
 				} else
 					log.debug("...Not enough training data available to make write predictions...");
 
-				/*// Testing the trained system model
-				// At least determine a threshold for the training data to
-				// get the system model
-				int extraServers = 0;
-				if (reads.length > 0) {
-
-					// Get the primal variables w, b from the model
-					double[] primalVariables = OnlineModel.getUpdatedModel(
-							proxy, reads, writes, dszs, trainingLabels);
-
-					// Get the extra number of servers needed
-					extraServers = Actuator.getExtraNumberOfServers(
-							primalVariables, rpredictedValue, wpredictedValue,
-							NUMBER_OF_SERVERS, dataSize);
-
-				} else
-					log.debug("...Not enough training data available to get the current system model...");
-
-				// Testing the Actuator module
-				// Get the all the available nodes in the cluster and determine
-				// which to commission or decommission
-				HashMap<String, Integer> nodesMap = new HashMap<String, Integer>();
-				nodesMap = Actuator.getCassandraInstances();
-
-				if (extraServers < 0) { // Decommission the extra number of
-										// servers
-					ArrayList<String> nodesToDecommission = Actuator
-							.getNodesToDecommission(nodesMap, extraServers);
-					if (nodesToDecommission != null) {
-						log.debug("Starting decommissionig " + extraServers
-								+ " servers");
-						Actuator.decommissionInstances(nodesToDecommission);
-					} else
-						log.debug("No enough instances to carry out actuation");
-				} else if (extraServers > 0) {
-					ArrayList<String> nodesToCommission = Actuator
-							.getNodesToCommission(nodesMap, extraServers);
-					if (nodesToCommission != null) {
-						log.debug("Starting Commissionig " + extraServers
-								+ " servers");
-						Actuator.commissionInstances(nodesToCommission);
-					} else
-						log.debug("No enough instances to carry out Commissioning");
-				} else
-					log.debug("Cassandra Cluster at its optimal performance, No actuation required");*/
+				// Time it takes to execute all the scripts
+				log.debug("Elapsed Time(ms) for predictions: "
+						+ ((System.nanoTime() - start) / 1000000));
+				/*
+				 * // Testing the trained system model // At least determine a
+				 * threshold for the training data to // get the system model
+				 * int extraServers = 0; if (reads.length > 0) {
+				 * 
+				 * // Get the primal variables w, b from the model double[]
+				 * primalVariables = OnlineModel.getUpdatedModel( proxy, reads,
+				 * writes, dszs, trainingLabels);
+				 * 
+				 * // Get the extra number of servers needed extraServers =
+				 * Actuator.getExtraNumberOfServers( primalVariables,
+				 * rpredictedValue, wpredictedValue, NUMBER_OF_SERVERS,
+				 * dataSize);
+				 * 
+				 * } else log.debug(
+				 * "...Not enough training data available to get the current system model..."
+				 * );
+				 * 
+				 * // Testing the Actuator module // Get the all the available
+				 * nodes in the cluster and determine // which to commission or
+				 * decommission HashMap<String, Integer> nodesMap = new
+				 * HashMap<String, Integer>(); nodesMap =
+				 * Actuator.getCassandraInstances();
+				 * 
+				 * if (extraServers < 0) { // Decommission the extra number of
+				 * // servers ArrayList<String> nodesToDecommission = Actuator
+				 * .getNodesToDecommission(nodesMap, extraServers); if
+				 * (nodesToDecommission != null) {
+				 * log.debug("Starting decommissionig " + extraServers +
+				 * " servers");
+				 * Actuator.decommissionInstances(nodesToDecommission); } else
+				 * log.debug("No enough instances to carry out actuation"); }
+				 * else if (extraServers > 0) { ArrayList<String>
+				 * nodesToCommission = Actuator .getNodesToCommission(nodesMap,
+				 * extraServers); if (nodesToCommission != null) {
+				 * log.debug("Starting Commissionig " + extraServers +
+				 * " servers"); Actuator.commissionInstances(nodesToCommission);
+				 * } else
+				 * log.debug("No enough instances to carry out Commissioning");
+				 * } else log.debug(
+				 * "Cassandra Cluster at its optimal performance, No actuation required"
+				 * );
+				 */
 				// TODO update the nodesMap after commission or decommission
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
