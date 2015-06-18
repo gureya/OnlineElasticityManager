@@ -94,7 +94,8 @@ public class SelfElastManStart {
 					.trim());
 			matlabPath = properties.matlabPath;
 			actuatorScriptsPath = properties.actuatorScriptsPath;
-			targetThroughput = Integer.parseInt(properties.targetThroughput);
+			targetThroughput = Integer.parseInt(properties.targetThroughput.trim());
+			SelfElastManStart.timerWindow = timerWindow;
 
 			// Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
@@ -211,6 +212,7 @@ public class SelfElastManStart {
 					log.info("No New dataStatitistics found...Zero operations reported");
 				} else {
 					// My throughput calculations here
+					System.out.println("Timer Window just before calculating throughput: "+timerWindow);
 					rThroughput = (roperations / timerWindow);
 
 					wThroughput = (woperations / timerWindow);
