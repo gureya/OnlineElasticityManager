@@ -129,8 +129,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		PredictorUtilities pu = new PredictorUtilities();
-		dataPoints = pu.readDataFile(dataPoints);
+		//PredictorUtilities pu = new PredictorUtilities();
+		//dataPoints = pu.readDataFile(dataPoints);
 
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
