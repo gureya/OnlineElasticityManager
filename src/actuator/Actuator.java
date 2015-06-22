@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -240,7 +242,7 @@ public class Actuator {
 	}
 
 	/*
-	 * Currently available instances
+	 * Initial Cassandra instances from a configuration
 	 */
 	public static HashMap<String, Integer> getCassandraInstances() {
 		String csvFile = "cassandra_nodes.txt";
@@ -272,6 +274,35 @@ public class Actuator {
 			}
 		}
 		return nodesMap;
+	}
+
+	/*
+	 * Get the current number of cassandra intances
+	 */
+	public static int getCurrentNoServers(HashMap<String, Integer> nodesMap) {
+		int count = 0;
+		for (int v : nodesMap.values()) {
+			if (v > 0) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	/*
+	 * Update cassandra instances
+	 */
+
+	public static HashMap<String, Integer> updateCurrentNoservers(
+			ArrayList<String> updatedNodes, HashMap<String, Integer> nodesMap,
+			int value) {
+
+		for (int i = 0; i < updatedNodes.size(); i++) {
+			if (nodesMap.containsKey(updatedNodes.get(i)))
+				nodesMap.put(updatedNodes.get(i), value);
+		}
+		return nodesMap;
+
 	}
 
 	/*

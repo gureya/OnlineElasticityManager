@@ -4,25 +4,23 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Map.Entry;
-
-import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
 
 import org.apache.log4j.Logger;
 
-import actuator.Actuator;
-import onlineelastman.OnlineModel;
 import onlineelastman.OnlineModelMetrics;
 
 public class PredictorUtilities {
 
 	static Logger log = Logger.getLogger(PredictorUtilities.class);
 
-	// Reading warm up data if available from a file
+	/**
+	 * Reading warm up data if available from a file
+	 * 
+	 * @param datapoints
+	 * @return
+	 */
 	public OnlineModelMetrics[][][] readDataFile(
 			OnlineModelMetrics[][][] datapoints) {
 		String csvFile = "dataFile.txt";
@@ -39,7 +37,7 @@ public class PredictorUtilities {
 				String[] datapoint = line.split(cvsSplitBy);
 				int rth = Integer.parseInt(datapoint[0]);
 				int wth = Integer.parseInt(datapoint[1]);
-				//int dsz = Integer.parseInt(datapoint[2]);
+				// int dsz = Integer.parseInt(datapoint[2]);
 				int dsz = 1;
 				int rl = Integer.parseInt(datapoint[3]);
 				int wl = Integer.parseInt(datapoint[4]);
@@ -84,16 +82,26 @@ public class PredictorUtilities {
 
 	}
 
-	// Get the mean of an array elements
+	/**
+	 * Get the mean of an array elements
+	 * 
+	 * @param p
+	 * @return
+	 */
 	public static double mean(double[] p) {
 		double sum = 0; // sum of all the elements
 		for (int i = 0; i < p.length; i++) {
 			sum += p[i];
 		}
 		return sum / p.length;
-	}// end method mean
+	}
 
-	// Return the length of the current datapoints without null ones
+	/**
+	 * Return the length of the current dataPoints without null ones
+	 * 
+	 * @param dataPoints
+	 * @return
+	 */
 	public static int arrayLength(OnlineModelMetrics[][][] dataPoints) {
 		int l = 0;
 		for (int i = 0; i < dataPoints.length; i++) {
@@ -108,89 +116,42 @@ public class PredictorUtilities {
 		return l;
 	}
 
-	// TODO: Combine the below functions into one function
-	// The loops can also be a performance bottleneck need to be eliminated
-	// Add the points to a datastructure at runtime and later convert to an
-	// array
+	// TODO: The loops can also be a performance bottleneck need to be
+	// eliminated
 
-	// Returns the read values in a multidimensional array needed by matlab
-	// scripts
-	public static double[][] getReadDatapoints(
+	/**
+	 * Returns the Training data in a multidimensional(2D) array needed by
+	 * matlab scripts
+	 * 
+	 * @param dataPoints
+	 * @return data2dArray
+	 */
+	public static PredictorMetrics getDataIn2DArray(
 			OnlineModelMetrics[][][] dataPoints) {
 		int r = 0;
-		double[][] reads = new double[PredictorUtilities
-				.arrayLength(dataPoints)][1];
-		for (int i = 0; i < dataPoints.length; i++) {
-			for (int j = 0; j < dataPoints[i].length; j++) {
-				for (int k = 0; k < dataPoints[i][j].length; k++) {
-					if (dataPoints[i][j][k] != null) {
-						reads[r][0] = dataPoints[i][j][k].getrThroughput();
-						r += 1;
-					}
-				}
-			}
-		}
-		return reads;
-	}
-
-	// Returns the write values in a multidimensional array needed by matlab
-	// scripts
-	public static double[][] getWriteDatapoints(
-			OnlineModelMetrics[][][] dataPoints) {
-		int r = 0;
-		double[][] writes = new double[PredictorUtilities
-				.arrayLength(dataPoints)][1];
-		for (int i = 0; i < dataPoints.length; i++) {
-			for (int j = 0; j < dataPoints[i].length; j++) {
-				for (int k = 0; k < dataPoints[i][j].length; k++) {
-					if (dataPoints[i][j][k] != null) {
-						writes[r][0] = dataPoints[i][j][k].getwThroughput();
-						r += 1;
-					}
-				}
-			}
-		}
-		return writes;
-	}
-
-	// Returns the DataSize values in a multidimensional array needed by matlab
-	// scripts
-	public static double[][] getDataSizeDatapoints(
-			OnlineModelMetrics[][][] dataPoints) {
-		int r = 0;
-		double[][] dsz = new double[PredictorUtilities.arrayLength(dataPoints)][1];
-		for (int i = 0; i < dataPoints.length; i++) {
-			for (int j = 0; j < dataPoints[i].length; j++) {
-				for (int k = 0; k < dataPoints[i][j].length; k++) {
-					if (dataPoints[i][j][k] != null) {
-						dsz[r][0] = dataPoints[i][j][k].getDatasize();
-						r += 1;
-					}
-				}
-			}
-		}
-		return dsz;
-	}
-
-	// Returns the TrainingLabels values in a multidimensional array needed by
-	// matlab scripts
-	public static double[][] getTrainingLabels(
-			OnlineModelMetrics[][][] dataPoints) {
-		int r = 0;
-		double[][] trainingLabels = new double[PredictorUtilities
-				.arrayLength(dataPoints)][1];
+		int size = PredictorUtilities.arrayLength(dataPoints);
+		double[][] trainingLabels = new double[size][1];
+		double[][] dsz = new double[size][1];
+		double[][] writes = new double[size][1];
+		double[][] reads = new double[size][1];
 		for (int i = 0; i < dataPoints.length; i++) {
 			for (int j = 0; j < dataPoints[i].length; j++) {
 				for (int k = 0; k < dataPoints[i][j].length; k++) {
 					if (dataPoints[i][j][k] != null) {
 						trainingLabels[r][0] = (dataPoints[i][j][k].isValid()) ? 1
 								: -1;
+						reads[r][0] = dataPoints[i][j][k].getrThroughput();
+						writes[r][0] = dataPoints[i][j][k].getwThroughput();
+						dsz[r][0] = dataPoints[i][j][k].getDatasize();
 						r += 1;
 					}
 				}
 			}
 		}
-		return trainingLabels;
+
+		PredictorMetrics data2dArray = new PredictorMetrics(trainingLabels,
+				dsz, writes, reads);
+		return data2dArray;
 	}
 
 }

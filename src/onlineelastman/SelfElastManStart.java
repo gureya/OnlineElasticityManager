@@ -53,7 +53,8 @@ public class SelfElastManStart {
 	public static MatlabProxy proxy;
 
 	// Variables used by the Actuator
-	public static int NUMBER_OF_SERVERS = 1;
+	public static int NUMBER_OF_SERVERS = 0;
+	public static HashMap<String, Integer> nodesMap;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
@@ -100,6 +101,11 @@ public class SelfElastManStart {
 
 			// Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
+			// Get initial number of servers for the all system
+			nodesMap = Actuator.getCassandraInstances();
+			// Initialize the active number of servers
+			NUMBER_OF_SERVERS = Actuator.getCurrentNoServers(nodesMap);
+			log.info("[Starting Number of Servers], "+NUMBER_OF_SERVERS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -123,8 +129,9 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		// PredictorUtilities pu = new PredictorUtilities();
-		// dataPoints = pu.readDataFile(dataPoints);
+		PredictorUtilities pu = new PredictorUtilities();
+		dataPoints = pu.readDataFile(dataPoints);
+
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
 		 * dataPoints[i].length; j++) { for (int k = 0; k <
@@ -135,7 +142,7 @@ public class SelfElastManStart {
 		 * dataPoints[i][j][k].getDatasize() + "," + (int)
 		 * dataPoints[i][j][k].getRlatency() + "," + (int)
 		 * dataPoints[i][j][k].getWlatency() + "," + valid + "," +
-		 * dataPoints[i][j][k].getrQueue(); // System.out.println(data); //
+		 * dataPoints[i][j][k].getrQueue();
 		 * OnlineModel.printtoFile("dataFile.txt", data); } } } }
 		 */
 
@@ -290,15 +297,14 @@ public class SelfElastManStart {
 						+ wpredictedValue;
 				OnlineModel.printtoFile(pfile, pdata);
 				global_timeseries_counter += 1;
-
-				double[][] reads = PredictorUtilities
-						.getReadDatapoints(dataPoints);
-				double[][] writes = PredictorUtilities
-						.getWriteDatapoints(dataPoints);
-				double[][] dszs = PredictorUtilities
-						.getDataSizeDatapoints(dataPoints);
-				double[][] trainingLabels = PredictorUtilities
-						.getTrainingLabels(dataPoints);
+                
+				PredictorMetrics data2dArray = PredictorUtilities.getDataIn2DArray(dataPoints);
+				double[][] reads = data2dArray.getReads();
+				double[][] writes = data2dArray.getWrites();
+				// double[][] dszs = PredictorUtilities
+				// .getDataSizeDatapoints(dataPoints);
+				// double[][] trainingLabels = PredictorUtilities
+				// .getTrainingLabels(dataPoints);
 				// Prediction for the read throughput
 				// For Debugging
 				String rpp = "Read Previous Predictions: ";
