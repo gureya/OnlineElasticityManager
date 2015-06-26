@@ -30,7 +30,7 @@ public class OnlineModel {
 		// for debugging
 		String data = "";
 		String file = "data.txt";
-		
+
 		// Assume that maximum datasize dont exceed maxReadTP or maxWriteTP
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j][k] != null) {
@@ -151,21 +151,24 @@ public class OnlineModel {
 
 		// Execute system_model.m script to get the updated system model
 		proxy.eval("[w, b, xmin, xmax] = system_model(reads, writes, dszs, trainingLabels)");
-		
-        //Get the primal variables in 3-D space + xmin & xmax
 
-		primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1 
-		primalVariables[1] = ((double[]) proxy.getVariable("w"))[1]; // w2
-		primalVariables[2] = ((double[]) proxy.getVariable("w"))[2]; // w3
-		primalVariables[3] = ((double[]) proxy.getVariable("b"))[0]; // b
-		primalVariables[4] = ((double[]) proxy.getVariable("xmin"))[0]; // xmin
-		primalVariables[5] = ((double[]) proxy.getVariable("xmax"))[0]; // xmax
-		
+		// Get the primal variables in 3-D space + xmin & xmax
+		if (((double[]) proxy.getVariable("w")).length != 0) {
+			primalVariables[0] = ((double[]) proxy.getVariable("w"))[0]; // w1
+			primalVariables[1] = ((double[]) proxy.getVariable("w"))[1]; // w2
+			primalVariables[2] = ((double[]) proxy.getVariable("w"))[2]; // w3
+			primalVariables[3] = ((double[]) proxy.getVariable("b"))[0]; // b
+			primalVariables[4] = ((double[]) proxy.getVariable("xmin"))[0]; // xmin
+			primalVariables[5] = ((double[]) proxy.getVariable("xmax"))[0]; // xmax
+		} else
+			log.debug("WARNING: training data in only one class. See README for details.");
+
 		return primalVariables;
 
 	}
 
-	// for debugging print the datapoints to a file for analysis (all the changes taking place in a datapoint)
+	// for debugging print the datapoints to a file for analysis (all the
+	// changes taking place in a datapoint)
 	public static void printtoFile(String file, String data) {
 
 		try {

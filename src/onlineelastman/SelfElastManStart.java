@@ -34,6 +34,7 @@ public class SelfElastManStart {
 	public static int maxWriteTP = 500;
 	public static int maxDataSize = 100;
 	public static double confLevel = 0.1;
+	public static double currentDataSize = 1.0;
 	public static String matlabPath = "/home/ubuntu/ElasticityManager/src/predictor";
 	public static String actuatorScriptsPath = "/home/ubuntu/ElasticityManager/src/actuator";
 	public static int readResponseTime = 5000;
@@ -41,7 +42,7 @@ public class SelfElastManStart {
 
 	// Variables used by Predictor Modules (r for reads && w for writes)
 	// Initialized to the number of algorithms
-	public static final int NUM_OF_ALGS = 5;
+	public static final int NUM_OF_ALGS = 6;
 	public static double[] rpreviousPredictions = new double[NUM_OF_ALGS];
 	public static double[] wpreviousPredictions = new double[NUM_OF_ALGS];
 	public static double[] rcurrentPredictions = new double[NUM_OF_ALGS];
@@ -55,6 +56,8 @@ public class SelfElastManStart {
 	// Variables used by the Actuator
 	public static int NUMBER_OF_SERVERS = 0;
 	public static HashMap<String, Integer> nodesMap;
+	public static int MIN_NUMBER_OF_SERVERS = 3;
+	public static int MAX_NUMBER_OF_SERVERS = 10;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
@@ -65,8 +68,8 @@ public class SelfElastManStart {
 	private int wstart;
 	private int rend;
 	private int wend;
-	private int dstart;
-	private int dend;
+	// private int dstart;
+	// private int dend;
 	private int fineRead;
 	private int fineWrite;
 	private int fineDataSize;
@@ -91,6 +94,8 @@ public class SelfElastManStart {
 			scale = Integer.parseInt(properties.scale.trim());
 			queueLength = Integer.parseInt(properties.queueLength.trim());
 			confLevel = Double.parseDouble(properties.confLevel.trim());
+			currentDataSize = Double.parseDouble(properties.currentDataSize
+					.trim());
 			readResponseTime = Integer.parseInt(properties.readResponseTime
 					.trim());
 			matlabPath = properties.matlabPath;
@@ -103,9 +108,15 @@ public class SelfElastManStart {
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
 			// Get initial number of servers for the all system
 			nodesMap = Actuator.getCassandraInstances();
+			// Set the maximum number of servers
+			MAX_NUMBER_OF_SERVERS = nodesMap.size();
 			// Initialize the active number of servers
 			NUMBER_OF_SERVERS = Actuator.getCurrentNoServers(nodesMap);
-			log.info("[Starting Number of Servers], "+NUMBER_OF_SERVERS);
+
+			log.info("[Active Starting Number of Servers], "
+					+ NUMBER_OF_SERVERS);
+			log.info("[Minimum Number of Servers], " + MIN_NUMBER_OF_SERVERS);
+			log.info("[Maximum Number of Servers], " + MAX_NUMBER_OF_SERVERS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -129,8 +140,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		//PredictorUtilities pu = new PredictorUtilities();
-		//dataPoints = pu.readDataFile(dataPoints);
+		// PredictorUtilities pu = new PredictorUtilities();
+		// dataPoints = pu.readDataFile(dataPoints);
 
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
@@ -193,7 +204,7 @@ public class SelfElastManStart {
 			int woperations = 0;
 
 			// Average dataSize Need to find a way to get from the Cassandra
-			// Cluster!
+			// Cluster! currently just changing it from config!
 			double dataSize = 1;
 
 			DataStatistics statsArray[];
@@ -214,8 +225,8 @@ public class SelfElastManStart {
 				if (!Double.isNaN(statsArray[1].getNoRequests()))
 					woperations = (int) statsArray[1].getNoRequests();
 
-				dataSize = 1; // Variation was done using the ycsb client,
-								// Default 1KB
+				dataSize = currentDataSize; // Variation was done using the ycsb
+											// client, Default 1KB
 				if (roperations == 0 && woperations == 0) {
 					log.info("No New dataStatitistics found...Zero operations reported");
 				} else {
@@ -231,7 +242,7 @@ public class SelfElastManStart {
 
 					int rt = (int) (rThroughput / scale);
 					int wt = (int) (wThroughput / scale);
-					int dsz = (int) (dataSize / scale);
+					// int dsz = (int) (dataSize / scale);
 
 					rstart = rt * scale;
 					rend = rstart + scale;
@@ -239,12 +250,13 @@ public class SelfElastManStart {
 					wstart = wt * scale;
 					wend = wstart + scale;
 
-					dstart = dsz * scale;
-					dend = dstart + scale;
+					// dstart = dsz * scale;
+					// dend = dstart + scale;
 
 					fineRead = (rstart + rend) / 2;
 					fineWrite = (wstart + wend) / 2;
-					fineDataSize = (dstart + dend) / 2;
+					// fineDataSize = (dstart + dend) / 2;
+					fineDataSize = (int) dataSize;
 
 					log.debug("[Data Size(KB)], " + dataSize);
 					log.debug("[READ], \tRunTime(us), "
@@ -297,14 +309,15 @@ public class SelfElastManStart {
 						+ wpredictedValue;
 				OnlineModel.printtoFile(pfile, pdata);
 				global_timeseries_counter += 1;
-                
-				PredictorMetrics data2dArray = PredictorUtilities.getDataIn2DArray(dataPoints);
+
+				PredictorMetrics data2dArray = PredictorUtilities
+						.getDataIn2DArray(dataPoints);
+
 				double[][] reads = data2dArray.getReads();
 				double[][] writes = data2dArray.getWrites();
-				// double[][] dszs = PredictorUtilities
-				// .getDataSizeDatapoints(dataPoints);
-				// double[][] trainingLabels = PredictorUtilities
-				// .getTrainingLabels(dataPoints);
+				double[][] dszs = data2dArray.getDsz();
+				double[][] trainingLabels = data2dArray.getTrainingLabels();
+
 				// Prediction for the read throughput
 				// For Debugging
 				String rpp = "Read Previous Predictions: ";
@@ -313,7 +326,7 @@ public class SelfElastManStart {
 				}
 				log.debug(rpp);
 
-				// Define the threshold of read data to atleast make a
+				// Define the threshold of read data to at least make a
 				// prediction
 				if (reads.length > 0) {
 					rcurrentPredictions = MatlabControl.getPredictions(proxy,
@@ -323,14 +336,14 @@ public class SelfElastManStart {
 							+ rcurrentPredictions[1] + "\tfft_value: "
 							+ rcurrentPredictions[2] + "\trt_value: "
 							+ rcurrentPredictions[3] + "\tsvm_value: "
-							+ rcurrentPredictions[4]);
+							+ rcurrentPredictions[4] + "\tminima: "
+							+ rcurrentPredictions[5]);
 					// Run the Weighted Majority Algorithm(WMA) and get the
 					// predicted values
 					// The actual values for the current window : fineRead &
 					// fineWrite
 					// Initialize the weights of all predictions to 1 [mean,
-					// max, fft,
-					// reg_trees, libsvm]; Only at the beginning
+					// max, fft, reg_trees, libsvm, min]; Only at the beginning
 
 					if (!rinitialWeights) {
 						for (int i = 0; i < NUM_OF_ALGS; i++) {
@@ -364,8 +377,8 @@ public class SelfElastManStart {
 							+ rpredictedValue);
 				} else
 					log.debug("...Not enough training data available to make read predictions...");
-				// Prediction & WMA for the write throughput
 
+				// Prediction & WMA for the write throughput
 				// For Debugging
 				String wpp = "Write Previous Predictions: ";
 				for (int i = 0; i < wpreviousPredictions.length; i++) {
@@ -383,7 +396,8 @@ public class SelfElastManStart {
 							+ wcurrentPredictions[1] + "\tfft_value: "
 							+ wcurrentPredictions[2] + "\trt_value: "
 							+ wcurrentPredictions[3] + "\tsvm_value: "
-							+ wcurrentPredictions[4]);
+							+ wcurrentPredictions[4] + "\tminima: "
+							+ wcurrentPredictions[5]);
 					// Get the predictedValue
 					if (!winitialWeights) {
 						for (int i = 0; i < NUM_OF_ALGS; i++) {
@@ -421,53 +435,79 @@ public class SelfElastManStart {
 				// Time it takes to execute all the scripts
 				log.debug("Elapsed Time(ms) for predictions: "
 						+ ((System.nanoTime() - start) / 1000000));
-				/*
-				 * // Testing the trained system model // At least determine a
-				 * threshold for the training data to // get the system model
-				 * int extraServers = 0; if (reads.length > 0) {
-				 * 
-				 * // Get the primal variables w, b from the model double[]
-				 * primalVariables = OnlineModel.getUpdatedModel( proxy, reads,
-				 * writes, dszs, trainingLabels);
-				 * 
-				 * // Get the extra number of servers needed extraServers =
-				 * Actuator.getExtraNumberOfServers( primalVariables,
-				 * rpredictedValue, wpredictedValue, NUMBER_OF_SERVERS,
-				 * dataSize);
-				 * 
-				 * } else log.debug(
-				 * "...Not enough training data available to get the current system model..."
-				 * );
-				 * 
-				 * // Testing the Actuator module // Get the all the available
-				 * nodes in the cluster and determine // which to commission or
-				 * decommission HashMap<String, Integer> nodesMap = new
-				 * HashMap<String, Integer>(); nodesMap =
-				 * Actuator.getCassandraInstances();
-				 * 
-				 * if (extraServers < 0) { // Decommission the extra number of
-				 * // servers ArrayList<String> nodesToDecommission = Actuator
-				 * .getNodesToDecommission(nodesMap, extraServers); if
-				 * (nodesToDecommission != null) {
-				 * log.debug("Starting decommissionig " + extraServers +
-				 * " servers");
-				 * Actuator.decommissionInstances(nodesToDecommission); } else
-				 * log.debug("No enough instances to carry out actuation"); }
-				 * else if (extraServers > 0) { ArrayList<String>
-				 * nodesToCommission = Actuator .getNodesToCommission(nodesMap,
-				 * extraServers); if (nodesToCommission != null) {
-				 * log.debug("Starting Commissionig " + extraServers +
-				 * " servers"); Actuator.commissionInstances(nodesToCommission);
-				 * } else
-				 * log.debug("No enough instances to carry out Commissioning");
-				 * } else log.debug(
-				 * "Cassandra Cluster at its optimal performance, No actuation required"
-				 * );
-				 */
-				// TODO update the nodesMap after commission or decommission
+
+				// Testing the trained system model
+				int extraServers = 0;
+				log.debug("[Current Number of Servers] " + NUMBER_OF_SERVERS);
+				// At least determine a threshold for the training data to get
+				// the system model
+
+				if (reads.length > 0) {
+					// Get the primal variables w, b from the model
+					double[] primalVariables = OnlineModel.getUpdatedModel(
+							proxy, reads, writes, dszs, trainingLabels);
+
+					if (primalVariables.length != 0) {
+						// Get the extra number of servers needed
+						extraServers = Actuator.getExtraNumberOfServers(
+								primalVariables, rpredictedValue,
+								wpredictedValue, NUMBER_OF_SERVERS, dataSize);
+
+						// Testing the Actuator module
+						if (extraServers < 0) {
+
+							// Decommission the extra number of servers
+							ArrayList<String> nodesToDecommission = Actuator
+									.getNodesToDecommission(nodesMap,
+											extraServers);
+							if (nodesToDecommission != null) {
+								log.debug("Starting decommissionig "
+										+ extraServers + " servers");
+								Actuator.decommissionInstances(nodesToDecommission);
+
+								// Update the current nodesMap assuming
+								// decommissioning
+								// happened sucessfully
+								nodesMap = Actuator.updateCurrentNoservers(
+										nodesToDecommission, nodesMap, 0);
+								// Update the current number of servers
+								NUMBER_OF_SERVERS = Actuator
+										.getCurrentNoServers(nodesMap);
+
+							} else
+								log.debug("No enough instances to carry out Decommissioning...");
+
+						} else if (extraServers > 0) {
+							ArrayList<String> nodesToCommission = Actuator
+									.getNodesToCommission(nodesMap,
+											extraServers);
+							if (nodesToCommission != null) {
+								log.debug("Starting Commissionig "
+										+ extraServers + " servers");
+								Actuator.commissionInstances(nodesToCommission);
+
+								// Update the current nodesMap assuming
+								// commissioning
+								// happened sucessfully
+								nodesMap = Actuator.updateCurrentNoservers(
+										nodesToCommission, nodesMap, 0);
+								// Update the current number of servers
+								NUMBER_OF_SERVERS = Actuator
+										.getCurrentNoServers(nodesMap);
+
+							} else
+								log.debug("No enough instances to carry out Commissioning...");
+						} else
+							log.debug("Cassandra Cluster at its optimal performance, No actuation required");
+					} else
+						log.debug("Primal variables returned null..problem with the training data");
+
+				} else
+					log.debug("...Not enough training data available to get the current system model and carry out actuation...");
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException e) {
+			} catch (IOException | MatlabInvocationException
+					| InterruptedException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());

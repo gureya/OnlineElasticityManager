@@ -22,11 +22,12 @@ public class Utilities {
 	String scale;
 	String queueLength;
 	String confLevel;
+	String currentDataSize;
 	String readResponseTime;
 	String matlabPath;
 	String actuatorScriptsPath;
 	String targetThroughput;
-	
+
 	static Logger log = Logger.getLogger(Utilities.class);
 
 	public void getProperties() throws IOException {
@@ -51,6 +52,7 @@ public class Utilities {
 		scale = prop.getProperty("scale");
 		queueLength = prop.getProperty("queueLength");
 		confLevel = prop.getProperty("confLevel");
+		currentDataSize = prop.getProperty("currentDataSize");
 		readResponseTime = prop.getProperty("readResponseTime");
 		matlabPath = prop.getProperty("matlabPath");
 		actuatorScriptsPath = prop.getProperty("actuatorScriptsPath");

@@ -44,14 +44,16 @@ public class MatlabControl {
 		proxy.eval("[fft_value, pattern] = fft_func(reads)");
 		proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)");
 		proxy.eval("[svm_value, accuracy, decision_values] = svm(timeseries, reads, nextWindow)");
+		proxy.eval("[minima] = minimum(reads)");
 
 		// Get the current predictions for time t+1; order:[mean, max, fft,
-		// reg_trees, libsvm]
+		// reg_trees, libsvm, min]
 		currentPredictions[0] = ((double[]) proxy.getVariable("avg"))[0];
 		currentPredictions[1] = ((double[]) proxy.getVariable("maxima"))[0];
 		currentPredictions[2] = ((double[]) proxy.getVariable("fft_value"))[0];
 		currentPredictions[3] = ((double[]) proxy.getVariable("rt_value"))[0];
 		currentPredictions[4] = ((double[]) proxy.getVariable("svm_value"))[0];
+		currentPredictions[5] = ((double[]) proxy.getVariable("minima"))[0];
 		
 		return currentPredictions;
 	}

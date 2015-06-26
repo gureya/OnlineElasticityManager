@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -25,9 +23,18 @@ public class Actuator {
 	static OutputStream _out = null;
 	static InputStream _err = null;
 
-	/*
+	// TODO A lot of maths going on in this function need a careful testing and
+	// error handling
+	/**
 	 * Get the Extra number of servers required to keep the Cassandra Cluster at
 	 * optimal performance
+	 * 
+	 * @param primalVariables
+	 * @param rpredictedValue
+	 * @param wpredictedValue
+	 * @param NUMBER_OF_SERVERS
+	 * @param currentDatasize
+	 * @return
 	 */
 	public static int getExtraNumberOfServers(double[] primalVariables,
 			double rpredictedValue, double wpredictedValue,
@@ -88,7 +95,7 @@ public class Actuator {
 		double t = ((k0 * (yy0 - y0)) + (k1 * (x0 - xx0)))
 				/ ((k0 * p1) - (k1 * p0));
 		// double s = ((x0 + (t * p0) - xx0)) / k0;
-		// Compute the Intersection point from the s and t
+		// Compute the Intersection point from s and t
 		double xIntersect = x0 + (t * p0); // Optimized reads
 		double yIntersect = y0 + (t * p1); // Optimized writes
 		double zIntersect = z0 + (t * (z1 - z0)); // current datasize
@@ -115,16 +122,29 @@ public class Actuator {
 
 		// Calculate the new number of servers
 		NEW_NUMBER_OF_SERVERS = (int) (predictedTotalThroughtput / optimizedThroughput);
-		extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+		// check if the new set of servers exceed the minimum and maximum number
+		// of available servers
+		if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
+			log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
+		} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
+			log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
+		} else
+			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
+
 		log.debug("[Extra Servers Needed], " + extraServers);
-		// TODO Remember to update the current total number of
-		// servers if actuation takes place.
+
 		return extraServers;
 	}
 
-	/*
+	// TODO Combine the following two functions as they are kind of repetitive
+	// passing the script to execute as an argument
+	/**
 	 * Decommission Cassandra Instances
+	 * 
+	 * @param instances
+	 * @throws IOException
+	 * @throws InterruptedException
 	 */
 	public static void decommissionInstances(ArrayList<String> instances)
 			throws IOException, InterruptedException {
@@ -182,8 +202,12 @@ public class Actuator {
 		}
 	}
 
-	/*
+	/**
 	 * Spawn new Cassandra instances
+	 * 
+	 * @param instances
+	 * @throws IOException
+	 * @throws InterruptedException
 	 */
 	public static void commissionInstances(ArrayList<String> instances)
 			throws IOException, InterruptedException {
@@ -241,8 +265,10 @@ public class Actuator {
 		}
 	}
 
-	/*
-	 * Initial Cassandra instances from a configuration
+	/**
+	 * Get initial Cassandra instances from a configuration
+	 * 
+	 * @return
 	 */
 	public static HashMap<String, Integer> getCassandraInstances() {
 		String csvFile = "cassandra_nodes.txt";
@@ -276,8 +302,11 @@ public class Actuator {
 		return nodesMap;
 	}
 
-	/*
-	 * Get the current number of cassandra intances
+	/**
+	 * Get the current number of active cassandra intances
+	 * 
+	 * @param nodesMap
+	 * @return
 	 */
 	public static int getCurrentNoServers(HashMap<String, Integer> nodesMap) {
 		int count = 0;
@@ -289,10 +318,18 @@ public class Actuator {
 		return count;
 	}
 
-	/*
-	 * Update cassandra instances
+	/**
+	 * Update Cassandra instances after commissioning or decommissioning
+	 * instances
+	 * 
+	 * @param updatedNodes
+	 *            , instances to update
+	 * @param nodesMap
+	 *            , current nodes map
+	 * @param value
+	 *            , 0 for decommissioning and 1 for commissioning
+	 * @return nodesMap, updated nodes map
 	 */
-
 	public static HashMap<String, Integer> updateCurrentNoservers(
 			ArrayList<String> updatedNodes, HashMap<String, Integer> nodesMap,
 			int value) {
@@ -305,8 +342,12 @@ public class Actuator {
 
 	}
 
-	/*
+	/**
 	 * Get the nodes to decommission
+	 * 
+	 * @param nodesMap
+	 * @param extraServers
+	 * @return ArrayList<String> nodesToDecommission
 	 */
 	public static ArrayList<String> getNodesToDecommission(
 			HashMap<String, Integer> nodesMap, int extraServers) {
@@ -326,8 +367,12 @@ public class Actuator {
 		return nodesToDecommission;
 	}
 
-	/*
+	/**
 	 * Get the nodes to Commission
+	 * 
+	 * @param nodesMap
+	 * @param extraServers
+	 * @return
 	 */
 	public static ArrayList<String> getNodesToCommission(
 			HashMap<String, Integer> nodesMap, int extraServers) {
