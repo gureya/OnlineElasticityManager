@@ -105,12 +105,13 @@ public class Actuator {
 
 		// Calculate the total throughput and the optimized
 		// throughput
-		double predictedTotalThroughtput = ((rpredictedValue + wpredictedValue) * NUMBER_OF_SERVERS); // predicted
-																										// total
-																										// throughput
-																										// for
-																										// time
-																										// t+1
+		double predictedThroughput = (rpredictedValue + wpredictedValue);
+		double predictedTotalThroughtput = ((predictedThroughput) * NUMBER_OF_SERVERS); // predicted
+																						// total
+																						// throughput
+																						// for
+																						// time
+																						// t+1
 		double optimizedThroughput = (xIntersect + yIntersect); // new
 																// optimized
 																// throughput
@@ -119,18 +120,29 @@ public class Actuator {
 		// TODO Set a threshold to only trigger actuation if
 		// there is a large change in throughput
 		// Use the known target throughput per server to determine this
+		// 5% of the total throughput of one server
+		int deadzone = Math
+				.abs((int) (predictedThroughput - optimizedThroughput));
 
+		// System.out.println("PredictedTotalThroughput: " +
+		// predictedThroughput);
+		// System.out.println("DeadZone is: " + deadzone);
 		// Calculate the new number of servers
 		NEW_NUMBER_OF_SERVERS = (int) (predictedTotalThroughtput / optimizedThroughput);
 		log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
-		// check if the new set of servers exceed the minimum and maximum number
-		// of available servers
-		if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
-			log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
-		} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
-			log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
+
+		if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
+			// check if the new set of servers exceed the minimum and maximum
+			// number
+			// of available servers
+			if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
+				log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
+			} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
+				log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
+			} else
+				extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		} else
-			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
+			log.info("Error in the Deadzone...Doing nothing!");
 
 		log.debug("[Extra Servers Needed], " + extraServers);
 

@@ -140,8 +140,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		// PredictorUtilities pu = new PredictorUtilities();
-		// dataPoints = pu.readDataFile(dataPoints);
+		 //PredictorUtilities pu = new PredictorUtilities();
+		 //dataPoints = pu.readDataFile(dataPoints);
 
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
@@ -386,7 +386,7 @@ public class SelfElastManStart {
 				}
 				log.debug(wpp);
 
-				// Define the threshold of write data to atleast make a
+				// Define the threshold of write data to at least make a
 				// prediction
 				if (writes.length > 0) {
 					wcurrentPredictions = MatlabControl.getPredictions(proxy,
@@ -435,7 +435,7 @@ public class SelfElastManStart {
 				// Time it takes to execute all the scripts
 				log.debug("Elapsed Time(ms) for predictions: "
 						+ ((System.nanoTime() - start) / 1000000));
-
+/*
 				// Testing the trained system model
 				int extraServers = 0;
 				log.debug("[Current Number of Servers] " + NUMBER_OF_SERVERS);
@@ -504,10 +504,9 @@ public class SelfElastManStart {
 
 				} else
 					log.debug("...Not enough training data available to get the current system model and carry out actuation...");
-
+*/
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException
-					| InterruptedException e) {
+			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
