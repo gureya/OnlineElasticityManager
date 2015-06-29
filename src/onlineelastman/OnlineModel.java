@@ -22,7 +22,8 @@ public class OnlineModel {
 	private static PrintWriter out;
 
 	public static OnlineModelMetrics[][][] buildModel(
-			OnlineModelMetrics[][][] dataPoints, OnlineModelMetrics omm) {
+			OnlineModelMetrics[][][] dataPoints, OnlineModelMetrics omm,
+			long global_timeseries_counter) {
 		int i = omm.getrThroughput();
 		int j = omm.getwThroughput();
 		int k = omm.getDatasize();
@@ -96,9 +97,10 @@ public class OnlineModel {
 				// for debugging...print each and every record to a file
 				// (whether new or existing)!!
 				int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
-				data = omm.getrThroughput() + "," + omm.getwThroughput() + ","
-						+ omm.getDatasize() + "," + (int) omm.getRlatency()
-						+ "," + (int) omm.getWlatency() + "," + valid + ","
+				data = global_timeseries_counter + "," + omm.getrThroughput()
+						+ "," + omm.getwThroughput() + "," + omm.getDatasize()
+						+ "," + (int) omm.getRlatency() + ","
+						+ (int) omm.getWlatency() + "," + valid + ","
 						+ dataPoints[i][j][k].getrQueue();
 				printtoFile(file, data);
 
@@ -118,7 +120,8 @@ public class OnlineModel {
 
 				// for debugging...print the datapoints to a file
 				int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
-				data = dataPoints[i][j][k].getrThroughput() + ","
+				data = global_timeseries_counter + ","
+						+ dataPoints[i][j][k].getrThroughput() + ","
 						+ dataPoints[i][j][k].getwThroughput() + ","
 						+ dataPoints[i][j][k].getDatasize() + ","
 						+ (int) dataPoints[i][j][k].getRlatency() + ","

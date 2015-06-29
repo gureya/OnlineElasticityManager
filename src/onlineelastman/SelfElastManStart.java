@@ -140,8 +140,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		 //PredictorUtilities pu = new PredictorUtilities();
-		 //dataPoints = pu.readDataFile(dataPoints);
+		PredictorUtilities pu = new PredictorUtilities();
+		dataPoints = pu.readDataFile(dataPoints);
 
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
@@ -284,7 +284,8 @@ public class SelfElastManStart {
 
 					// OnlineModelMetrics[] newdataPoints = new
 					// OnlineModelMetrics[dataPoints.length];
-					dataPoints = OnlineModel.buildModel(dataPoints, omm);
+					dataPoints = OnlineModel.buildModel(dataPoints, omm,
+							global_timeseries_counter);
 					// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 					// dataPoints.length);
 				}
@@ -435,13 +436,13 @@ public class SelfElastManStart {
 				// Time it takes to execute all the scripts
 				log.debug("Elapsed Time(ms) for predictions: "
 						+ ((System.nanoTime() - start) / 1000000));
-/*
+
 				// Testing the trained system model
 				int extraServers = 0;
 				log.debug("[Current Number of Servers] " + NUMBER_OF_SERVERS);
+
 				// At least determine a threshold for the training data to get
 				// the system model
-
 				if (reads.length > 0) {
 					// Get the primal variables w, b from the model
 					double[] primalVariables = OnlineModel.getUpdatedModel(
@@ -464,12 +465,11 @@ public class SelfElastManStart {
 								log.debug("Starting decommissionig "
 										+ extraServers + " servers");
 								Actuator.decommissionInstances(nodesToDecommission);
-
 								// Update the current nodesMap assuming
-								// decommissioning
-								// happened sucessfully
+								// decommissioning happened sucessfully
 								nodesMap = Actuator.updateCurrentNoservers(
 										nodesToDecommission, nodesMap, 0);
+
 								// Update the current number of servers
 								NUMBER_OF_SERVERS = Actuator
 										.getCurrentNoServers(nodesMap);
@@ -486,9 +486,8 @@ public class SelfElastManStart {
 										+ extraServers + " servers");
 								Actuator.commissionInstances(nodesToCommission);
 
-								// Update the current nodesMap assuming
-								// commissioning
-								// happened sucessfully
+								// Update the current nodesMap assuming //
+								// commissioning happened sucessfully
 								nodesMap = Actuator.updateCurrentNoservers(
 										nodesToCommission, nodesMap, 0);
 								// Update the current number of servers
@@ -504,9 +503,10 @@ public class SelfElastManStart {
 
 				} else
 					log.debug("...Not enough training data available to get the current system model and carry out actuation...");
-*/
+
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException e) {
+			} catch (IOException | MatlabInvocationException
+					| InterruptedException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
