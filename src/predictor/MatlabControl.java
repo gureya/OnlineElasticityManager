@@ -89,14 +89,14 @@ public class MatlabControl {
 		// Reward the Winner
 		for (Entry<Integer, Integer> entry : weights.entrySet()) {
 			if (entry.getKey() != keyOfMaxValue) {
-				if (entry.getValue() != 0 && entry.getValue() <= 5) {
+				if (entry.getValue() != 0 && entry.getValue() <= 3) {
 					int k1 = entry.getKey();
 					int value1 = entry.getValue();
 					value1 -= 1;
 					weights.put(k1, value1);
 				}
 			} else {
-				if (entry.getValue() < 5) {
+				if (entry.getValue() < 3) {
 					int k1 = entry.getKey();
 					int value1 = entry.getValue();
 					value1 += 1;

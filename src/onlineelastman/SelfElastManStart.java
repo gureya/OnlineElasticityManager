@@ -140,8 +140,8 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		PredictorUtilities pu = new PredictorUtilities();
-		dataPoints = pu.readDataFile(dataPoints);
+		// PredictorUtilities pu = new PredictorUtilities();
+		// dataPoints = pu.readDataFile(dataPoints);
 
 		/*
 		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
@@ -348,7 +348,7 @@ public class SelfElastManStart {
 
 					if (!rinitialWeights) {
 						for (int i = 0; i < NUM_OF_ALGS; i++) {
-							rweights.put(i, 5); // Assign a five-star
+							rweights.put(i, 3); // Assign a three-star
 												// initially.
 												// All weights are equal
 						}
@@ -402,7 +402,7 @@ public class SelfElastManStart {
 					// Get the predictedValue
 					if (!winitialWeights) {
 						for (int i = 0; i < NUM_OF_ALGS; i++) {
-							wweights.put(i, 5); // Assign a five-star
+							wweights.put(i, 3); // Assign a three-star
 												// initially.
 												// All weights are equal
 						}
