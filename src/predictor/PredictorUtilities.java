@@ -37,24 +37,27 @@ public class PredictorUtilities {
 				String[] datapoint = line.split(cvsSplitBy);
 				int rth = Integer.parseInt(datapoint[0]);
 				int wth = Integer.parseInt(datapoint[1]);
-				// int dsz = Integer.parseInt(datapoint[2]);
-				int dsz = 1;
+				int dsz = Integer.parseInt(datapoint[2]);
+				// int dsz = 1;
 				int rl = Integer.parseInt(datapoint[3]);
 				int wl = Integer.parseInt(datapoint[4]);
 				int slo = Integer.parseInt(datapoint[5]);
 				boolean valid = (slo == 1) ? true : false;
 				String rq = datapoint[6]
 						.substring(1, datapoint[6].length() - 1);
-				String[] rqArray = rq.split(cvsSplitBy);
+				String[] rqArray = rq.split(";");
 				Queue<Integer> rqe = new LinkedList<Integer>();
+				Queue<Integer> wqe = new LinkedList<Integer>();
+				
+				wqe.add(0);
 				for (int i = 0; i < rqArray.length; i++) {
-					rqe.add(Integer.parseInt(rqArray[i]));
+					rqe.add(Integer.parseInt(rqArray[i].trim()));
 				}
-				// System.out.println("\trth " + rth +"\twth " + wth + "\tdsz "
-				// + dsz + "\trl " + rl + "\twl " + wl);
+				// System.out.println("\trth " + rth + "\twth " + wth + "\tdsz "
+				// + dsz + "\trl " + rl + "\twl " + wl + "\trqe" + rqe);
 
 				OnlineModelMetrics point = new OnlineModelMetrics(rth, wth,
-						dsz, rl, wl, true, rqe, null, valid);
+						dsz, rl, wl, true, rqe, wqe, valid);
 
 				if (datapoints[rth][wth][dsz] != null) {
 					datapoints[rth][wth][dsz].setrQueue(point.getrQueue());

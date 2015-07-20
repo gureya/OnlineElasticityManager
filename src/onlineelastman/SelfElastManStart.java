@@ -79,6 +79,10 @@ public class SelfElastManStart {
 	public double wpredictedValue = 0;
 	long global_timeseries_counter = 0;
 
+	/**
+	 * @param timerWindow
+	 * @throws MatlabInvocationException
+	 */
 	public SelfElastManStart(int timerWindow) throws MatlabInvocationException {
 		timer = new Timer();
 		log.info("Starting the Online Autonomic Controller...");
@@ -140,32 +144,27 @@ public class SelfElastManStart {
 
 		// /Testing the warm up phase // Testing the system with an existing
 		// data
-		// PredictorUtilities pu = new PredictorUtilities();
-		// dataPoints = pu.readDataFile(dataPoints);
+		PredictorUtilities pu = new PredictorUtilities();
+		dataPoints = pu.readDataFile(dataPoints);
 
-		/*
-		 * for (int i = 0; i < dataPoints.length; i++) { for (int j = 0; j <
-		 * dataPoints[i].length; j++) { for (int k = 0; k <
-		 * dataPoints[i][j].length; k++) { if (dataPoints[i][j][k] != null) {
-		 * int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1; String data =
-		 * dataPoints[i][j][k].getrThroughput() + "," +
-		 * dataPoints[i][j][k].getwThroughput() + "," +
-		 * dataPoints[i][j][k].getDatasize() + "," + (int)
-		 * dataPoints[i][j][k].getRlatency() + "," + (int)
-		 * dataPoints[i][j][k].getWlatency() + "," + valid + "," +
-		 * dataPoints[i][j][k].getrQueue();
-		 * OnlineModel.printtoFile("dataFile.txt", data); } } } }
-		 */
-
-		/*
-		 * // Testing the prediction and System Model on warm up data/Existing
-		 * data pu.testPredictorSystemModel(dataPoints, rpreviousPredictions,
-		 * wpreviousPredictions, rcurrentPredictions, wcurrentPredictions,
-		 * proxy, rinitialWeights, winitialWeights, rweights, wweights,
-		 * NUMBER_OF_SERVERS, NUM_OF_ALGS, 245, 245);
-		 * 
-		 * System.exit(0);
-		 */
+		// for (int i = 0; i < dataPoints.length; i++) {
+		// for (int j = 0; j < dataPoints[i].length; j++) {
+		// for (int k = 0; k < dataPoints[i][j].length; k++) {
+		// if (dataPoints[i][j][k] != null) {
+		// int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
+		// String data = dataPoints[i][j][k].getrThroughput()
+		// + "," + dataPoints[i][j][k].getwThroughput()
+		// + "," + dataPoints[i][j][k].getDatasize() + ","
+		// + (int) dataPoints[i][j][k].getRlatency() + ","
+		// + (int) dataPoints[i][j][k].getWlatency() + ","
+		// + valid + "," + dataPoints[i][j][k].getrQueue();
+		// System.out.println(data);
+		// // OnlineModel.printtoFile("dataFile.txt", data);
+		// }
+		// }
+		// }
+		// }
+		// System.exit(0);
 
 		timer.schedule(new PeriodicExecutor(), 0, timerWindow * 1000);
 	}
@@ -307,7 +306,8 @@ public class SelfElastManStart {
 
 				pdata = global_timeseries_counter + "," + fineRead + ","
 						+ rpredictedValue + "," + fineWrite + ","
-						+ wpredictedValue;
+						+ wpredictedValue + "," + Math.round(rPercentile) + ","
+						+ NUMBER_OF_SERVERS;
 				OnlineModel.printtoFile(pfile, pdata);
 				global_timeseries_counter += 1;
 
