@@ -129,7 +129,7 @@ public class Actuator {
 		// System.out.println("DeadZone is: " + deadzone);
 		// Calculate the new number of servers
 		NEW_NUMBER_OF_SERVERS = (int) (predictedTotalThroughtput / optimizedThroughput);
-		log.debug("[NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
 
 		if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
 			// check if the new set of servers exceed the minimum and maximum
@@ -137,13 +137,17 @@ public class Actuator {
 			// of available servers
 			if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
 				log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
+				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MIN_NUMBER_OF_SERVERS;
 			} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
 				log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
+				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MAX_NUMBER_OF_SERVERS;
 			} else
-				extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
+				log.info("New number of servers in the range of the cluster!");
 		} else
 			log.info("Error in the Deadzone...Doing nothing!");
-
+		
+		log.debug("Required [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+		extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		log.debug("[Extra Servers Needed], " + extraServers);
 
 		return extraServers;
