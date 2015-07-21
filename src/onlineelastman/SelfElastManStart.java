@@ -491,7 +491,7 @@ public class SelfElastManStart {
 								// Update the current nodesMap assuming //
 								// commissioning happened sucessfully
 								nodesMap = Actuator.updateCurrentNoservers(
-										nodesToCommission, nodesMap, 0);
+										nodesToCommission, nodesMap, 1);
 								// Update the current number of servers
 								NUMBER_OF_SERVERS = Actuator
 										.getCurrentNoServers(nodesMap);
