@@ -106,6 +106,8 @@ public class SelfElastManStart {
 			actuatorScriptsPath = properties.actuatorScriptsPath;
 			targetThroughput = Integer.parseInt(properties.targetThroughput
 					.trim());
+			MIN_NUMBER_OF_SERVERS = Integer.parseInt(properties.minServers.trim());
+			MAX_NUMBER_OF_SERVERS = Integer.parseInt(properties.maxServers.trim());
 			SelfElastManStart.timerWindow = timerWindow;
 
 			// Initialize the datapoint grids

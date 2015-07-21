@@ -27,6 +27,8 @@ public class Utilities {
 	String matlabPath;
 	String actuatorScriptsPath;
 	String targetThroughput;
+	String minServers;
+	String maxServers;
 
 	static Logger log = Logger.getLogger(Utilities.class);
 
@@ -57,5 +59,7 @@ public class Utilities {
 		matlabPath = prop.getProperty("matlabPath");
 		actuatorScriptsPath = prop.getProperty("actuatorScriptsPath");
 		targetThroughput = prop.getProperty("targetThroughput");
+		minServers = prop.getProperty("minServers");
+		maxServers = prop.getProperty("maxServers");
 	}
 }
