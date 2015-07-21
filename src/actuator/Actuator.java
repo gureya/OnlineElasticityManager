@@ -143,11 +143,12 @@ public class Actuator {
 				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MAX_NUMBER_OF_SERVERS;
 			} else
 				log.info("New number of servers in the range of the cluster!");
+			
+			log.debug("Required [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		} else
 			log.info("Error in the Deadzone...Doing nothing!");
 		
-		log.debug("Required [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
-		extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		log.debug("[Extra Servers Needed], " + extraServers);
 
 		return extraServers;
