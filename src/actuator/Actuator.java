@@ -128,7 +128,7 @@ public class Actuator {
 		// predictedThroughput);
 		// System.out.println("DeadZone is: " + deadzone);
 		// Calculate the new number of servers
-		NEW_NUMBER_OF_SERVERS = (int) (predictedTotalThroughtput / optimizedThroughput);
+		NEW_NUMBER_OF_SERVERS = (int) Math.round((predictedTotalThroughtput / optimizedThroughput));
 		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
 
 		if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
