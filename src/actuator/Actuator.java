@@ -128,8 +128,10 @@ public class Actuator {
 		// predictedThroughput);
 		// System.out.println("DeadZone is: " + deadzone);
 		// Calculate the new number of servers
-		NEW_NUMBER_OF_SERVERS = (int) Math.round((predictedTotalThroughtput / optimizedThroughput));
-		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+		NEW_NUMBER_OF_SERVERS = (int) Math
+				.round((predictedTotalThroughtput / optimizedThroughput));
+		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], "
+				+ NEW_NUMBER_OF_SERVERS);
 
 		if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
 			// check if the new set of servers exceed the minimum and maximum
@@ -143,12 +145,13 @@ public class Actuator {
 				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MAX_NUMBER_OF_SERVERS;
 			} else
 				log.info("New number of servers in the range of the cluster!");
-			
-			log.debug("Required [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+
+			log.debug("Required [NEW_NUMBER_OF_SERVERS], "
+					+ NEW_NUMBER_OF_SERVERS);
 			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
 		} else
 			log.info("Error in the Deadzone...Doing nothing!");
-		
+
 		log.debug("[Extra Servers Needed], " + extraServers);
 
 		return extraServers;
@@ -237,6 +240,7 @@ public class Actuator {
 		try {
 			String command = SelfElastManStart.actuatorScriptsPath
 					+ "/addInstances.sh" + args;
+			log.debug("[Command to Execute], " + command);
 			_process = Runtime.getRuntime().exec(command);
 			// ... don't forget to initialise in, out, and error,
 			// .... and consume the streams in separate threads!

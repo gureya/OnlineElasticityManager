@@ -466,7 +466,7 @@ public class SelfElastManStart {
 							if (nodesToDecommission != null) {
 								log.debug("Starting decommissionig "
 										+ extraServers + " servers");
-								Actuator.decommissionInstances(nodesToDecommission);
+								//Actuator.decommissionInstances(nodesToDecommission);
 								// Update the current nodesMap assuming
 								// decommissioning happened sucessfully
 								nodesMap = Actuator.updateCurrentNoservers(
@@ -486,7 +486,7 @@ public class SelfElastManStart {
 							if (nodesToCommission != null) {
 								log.debug("Starting Commissionig "
 										+ extraServers + " servers");
-								Actuator.commissionInstances(nodesToCommission);
+								//Actuator.commissionInstances(nodesToCommission);
 
 								// Update the current nodesMap assuming //
 								// commissioning happened sucessfully
@@ -507,8 +507,7 @@ public class SelfElastManStart {
 					log.debug("...Not enough training data available to get the current system model and carry out actuation...");
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException
-					| InterruptedException e) {
+			} catch (IOException | MatlabInvocationException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());
