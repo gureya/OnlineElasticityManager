@@ -52,6 +52,10 @@ public class SelfElastManStart {
 	public static HashMap<Integer, Integer> rweights = new HashMap<Integer, Integer>();
 	public static HashMap<Integer, Integer> wweights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
+	
+	//Testing the prediction with a sliding window
+	public static List<Double> readList = new ArrayList<Double>();
+	public static List<Double> writeList = new ArrayList<Double>();
 
 	// Variables used by the Actuator
 	public static int NUMBER_OF_SERVERS = 0;
@@ -300,7 +304,13 @@ public class SelfElastManStart {
 				// the lowest
 				// dimension Java array that can be sent to MATLAB is a
 				// double[][]
-
+				
+				//Keep track of the read and write prediction in a list (Prediction_Data)
+				readList.add((double) fineRead);
+				writeList.add((double) fineWrite);
+				double[][] readData = PredictorUtilities.convertIntegers(readList);
+				double[][] writeData = PredictorUtilities.convertIntegers(writeList);
+				
 				// Print prediction data into a file for analysis
 				// counter,realRead,predictedRead,realWrite,predictedWrite
 				String pfile = "pdata.txt";
@@ -313,14 +323,6 @@ public class SelfElastManStart {
 				OnlineModel.printtoFile(pfile, pdata);
 				global_timeseries_counter += 1;
 
-				PredictorMetrics data2dArray = PredictorUtilities
-						.getDataIn2DArray(dataPoints);
-
-				double[][] reads = data2dArray.getReads();
-				double[][] writes = data2dArray.getWrites();
-				double[][] dszs = data2dArray.getDsz();
-				double[][] trainingLabels = data2dArray.getTrainingLabels();
-
 				// Prediction for the read throughput
 				// For Debugging
 				String rpp = "Read Previous Predictions: ";
@@ -331,9 +333,9 @@ public class SelfElastManStart {
 
 				// Define the threshold of read data to at least make a
 				// prediction
-				if (reads.length > 0) {
+				if (readData.length > 0) {
 					rcurrentPredictions = MatlabControl.getPredictions(proxy,
-							rcurrentPredictions, reads);
+							rcurrentPredictions, readData);
 					log.debug("[Read Predictions], " + "\tavg: "
 							+ rcurrentPredictions[0] + "\tmax: "
 							+ rcurrentPredictions[1] + "\tfft_value: "
@@ -391,9 +393,9 @@ public class SelfElastManStart {
 
 				// Define the threshold of write data to at least make a
 				// prediction
-				if (writes.length > 0) {
+				if (writeData.length > 0) {
 					wcurrentPredictions = MatlabControl.getPredictions(proxy,
-							wcurrentPredictions, writes);
+							wcurrentPredictions, writeData);
 					log.debug("[Write Predictions], " + "\tavg: "
 							+ wcurrentPredictions[0] + "\tmax: "
 							+ wcurrentPredictions[1] + "\tfft_value: "
@@ -440,6 +442,15 @@ public class SelfElastManStart {
 						+ ((System.nanoTime() - start) / 1000000));
 
 				// Testing the trained system model
+				// Model TrainingData - Reading from a config file
+				PredictorMetrics data2dArray = PredictorUtilities
+						.getDataIn2DArray(dataPoints);
+
+				double[][] reads = data2dArray.getReads();
+				double[][] writes = data2dArray.getWrites();
+				double[][] dszs = data2dArray.getDsz();
+				double[][] trainingLabels = data2dArray.getTrainingLabels();
+				
 				int extraServers = 0;
 				log.debug("[Current Number of Servers] " + NUMBER_OF_SERVERS);
 
@@ -466,7 +477,7 @@ public class SelfElastManStart {
 							if (nodesToDecommission != null) {
 								log.debug("Starting decommissionig "
 										+ extraServers + " servers");
-								//Actuator.decommissionInstances(nodesToDecommission);
+								Actuator.decommissionInstances(nodesToDecommission);
 								// Update the current nodesMap assuming
 								// decommissioning happened sucessfully
 								nodesMap = Actuator.updateCurrentNoservers(
@@ -486,7 +497,7 @@ public class SelfElastManStart {
 							if (nodesToCommission != null) {
 								log.debug("Starting Commissionig "
 										+ extraServers + " servers");
-								//Actuator.commissionInstances(nodesToCommission);
+								Actuator.commissionInstances(nodesToCommission);
 
 								// Update the current nodesMap assuming //
 								// commissioning happened sucessfully
@@ -507,7 +518,7 @@ public class SelfElastManStart {
 					log.debug("...Not enough training data available to get the current system model and carry out actuation...");
 
 				log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-			} catch (IOException | MatlabInvocationException e) {
+			} catch (IOException | MatlabInvocationException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				log.debug("Timer Task Aborted with Errors...!%n: "
 						+ e.getMessage());

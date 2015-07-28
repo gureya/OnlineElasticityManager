@@ -133,7 +133,7 @@ public class Actuator {
 		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], "
 				+ NEW_NUMBER_OF_SERVERS);
 
-		if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
+		//if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
 			// check if the new set of servers exceed the minimum and maximum
 			// number
 			// of available servers
@@ -149,8 +149,8 @@ public class Actuator {
 			log.debug("Required [NEW_NUMBER_OF_SERVERS], "
 					+ NEW_NUMBER_OF_SERVERS);
 			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
-		} else
-			log.info("Error in the Deadzone...Doing nothing!");
+		//} else
+		//	log.info("Error in the Deadzone...Doing nothing!");
 
 		log.debug("[Extra Servers Needed], " + extraServers);
 

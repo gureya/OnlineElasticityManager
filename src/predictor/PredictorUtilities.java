@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import org.apache.log4j.Logger;
@@ -155,6 +156,17 @@ public class PredictorUtilities {
 		PredictorMetrics data2dArray = new PredictorMetrics(trainingLabels,
 				dsz, writes, reads);
 		return data2dArray;
+	}
+	
+	public static double[][] convertIntegers(List<Double> list){
+		double[][] ret = new double[list.size()][1];
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[i].length; j++) {
+				ret[i][j] = list.get(i).doubleValue();
+				//System.out.println(ret[i][j]);
+			}
+		}
+		return ret;
 	}
 
 }
