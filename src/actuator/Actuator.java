@@ -133,24 +133,23 @@ public class Actuator {
 		log.debug("Calculated [NEW_NUMBER_OF_SERVERS], "
 				+ NEW_NUMBER_OF_SERVERS);
 
-		//if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
-			// check if the new set of servers exceed the minimum and maximum
-			// number
-			// of available servers
-			if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
-				log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
-				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MIN_NUMBER_OF_SERVERS;
-			} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
-				log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
-				NEW_NUMBER_OF_SERVERS = SelfElastManStart.MAX_NUMBER_OF_SERVERS;
-			} else
-				log.info("New number of servers in the range of the cluster!");
+		// if (deadzone > (0.05 * SelfElastManStart.targetThroughput)) {
+		// check if the new set of servers exceed the minimum and maximum
+		// number
+		// of available servers
+		if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
+			log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
+			NEW_NUMBER_OF_SERVERS = SelfElastManStart.MIN_NUMBER_OF_SERVERS;
+		} else if (NEW_NUMBER_OF_SERVERS > SelfElastManStart.MAX_NUMBER_OF_SERVERS) {
+			log.info("New number of servers should not exceed the maximum number of servers to carry out the actuation");
+			NEW_NUMBER_OF_SERVERS = SelfElastManStart.MAX_NUMBER_OF_SERVERS;
+		} else
+			log.info("New number of servers in the range of the cluster!");
 
-			log.debug("Required [NEW_NUMBER_OF_SERVERS], "
-					+ NEW_NUMBER_OF_SERVERS);
-			extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
-		//} else
-		//	log.info("Error in the Deadzone...Doing nothing!");
+		log.debug("Required [NEW_NUMBER_OF_SERVERS], " + NEW_NUMBER_OF_SERVERS);
+		extraServers = NEW_NUMBER_OF_SERVERS - NUMBER_OF_SERVERS;
+		// } else
+		// log.info("Error in the Deadzone...Doing nothing!");
 
 		log.debug("[Extra Servers Needed], " + extraServers);
 
@@ -169,25 +168,87 @@ public class Actuator {
 	public static void decommissionInstances(ArrayList<String> instances)
 			throws IOException, InterruptedException {
 
+		boolean processCompleted = false;
 		String args = "";
 		for (int i = 0; i < instances.size(); i++) {
 			args = args + " " + instances.get(i);
 		}
 
+		String command = SelfElastManStart.actuatorScriptsPath
+				+ "/removeInstances.sh" + args;
+		log.debug("[Command to Execute], " + command);
+		_process = Runtime.getRuntime().exec(command);
+		// ... don't forget to initialise in, out, and error,
+		// .... and consume the streams in separate threads!
+		log.info("Starting a new actuation process..");
+
+		final BufferedReader errReader = new BufferedReader(
+				new InputStreamReader(_process.getErrorStream()));
+		final BufferedReader inReader = new BufferedReader(
+				new InputStreamReader(_process.getInputStream()));
+
+		// read error and input streams as this would free up the buffers
+		// free the error stream buffer
+		Thread errThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					String line = errReader.readLine();
+					while ((line != null) && !isInterrupted()) {
+						System.err.println(line);
+						line = errReader.readLine();
+					}
+				} catch (IOException ioe) {
+					log.warn("Error reading the error stream", ioe);
+				}
+			}
+		};
+		Thread outThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					String line = inReader.readLine();
+					while ((line != null) && !isInterrupted()) {
+						System.out.println(line);
+						line = inReader.readLine();
+					}
+				} catch (IOException ioe) {
+					log.warn("Error reading the out stream", ioe);
+				}
+			}
+		};
 		try {
-			String command = SelfElastManStart.actuatorScriptsPath
-					+ "/removeInstances.sh" + args;
-			log.debug("[Command to Execute], " + command);
-			_process = Runtime.getRuntime().exec(command);
-			// ... don't forget to initialise in, out, and error,
-			// .... and consume the streams in separate threads!
-			_process.waitFor();
-			log.debug("Script executed successfully");
-			
-		} catch (Exception e) {
-			log.debug("Script execution failed");
-		    e.printStackTrace();
-		  }
+			errThread.start();
+			outThread.start();
+		} catch (IllegalStateException ise) {
+		}
+
+		// wait for the process to finish and check the exit code
+		try {
+			int exitCode = _process.waitFor();
+			log.info("Actuation process exited with value: " + exitCode);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			processCompleted = false;
+		}
+
+		try {
+			// make sure that the error thread exits
+			// on Windows these threads sometimes get stuck and hang the
+			// execution
+			// timeout and join later after destroying the process.
+			errThread.join();
+			outThread.join();
+			errReader.close();
+			inReader.close();
+		} catch (InterruptedException ie) {
+			log.info(
+					"ShellExecutor: Interrupted while reading the error/out stream",
+					ie);
+		} catch (IOException ioe) {
+			log.warn("Error while closing the error/out stream", ioe);
+		}
 	}
 
 	/**
@@ -200,25 +261,88 @@ public class Actuator {
 	public static void commissionInstances(ArrayList<String> instances)
 			throws IOException, InterruptedException {
 
+		boolean processCompleted = false;
 		String args = "";
 		for (int i = 0; i < instances.size(); i++) {
 			args = args + " " + instances.get(i);
 		}
 
-		try {
-			String command = SelfElastManStart.actuatorScriptsPath
-					+ "/addInstances.sh" + args;
-			log.debug("[Command to Execute], " + command);
-			_process = Runtime.getRuntime().exec(command);
-			// ... don't forget to initialise in, out, and error,
-			// .... and consume the streams in separate threads!
-			_process.waitFor();
-			log.debug("Script executed successfully");
+		String command = SelfElastManStart.actuatorScriptsPath
+				+ "/addInstances.sh" + args;
+		log.debug("[Command to Execute], " + command);
+		_process = Runtime.getRuntime().exec(command);
+		// ... don't forget to initialise in, out, and error,
+		// .... and consume the streams in separate threads!
+		log.info("Starting a new actuation process..");
 
-		} catch (Exception e) {
-			log.debug("Script execution failed");
-		    e.printStackTrace();
-		  }
+		final BufferedReader errReader = new BufferedReader(
+				new InputStreamReader(_process.getErrorStream()));
+		final BufferedReader inReader = new BufferedReader(
+				new InputStreamReader(_process.getInputStream()));
+
+		// read error and input streams as this would free up the buffers
+		// free the error stream buffer
+		Thread errThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					String line = errReader.readLine();
+					while ((line != null) && !isInterrupted()) {
+						System.err.println(line);
+						line = errReader.readLine();
+					}
+				} catch (IOException ioe) {
+					log.warn("Error reading the error stream", ioe);
+				}
+			}
+		};
+		Thread outThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					String line = inReader.readLine();
+					while ((line != null) && !isInterrupted()) {
+						System.out.println(line);
+						line = inReader.readLine();
+					}
+				} catch (IOException ioe) {
+					log.warn("Error reading the out stream", ioe);
+				}
+			}
+		};
+		try {
+			errThread.start();
+			outThread.start();
+		} catch (IllegalStateException ise) {
+		}
+
+		// wait for the process to finish and check the exit code
+		try {
+			int exitCode = _process.waitFor();
+			log.info("Actuation process exited with value: " + exitCode);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			processCompleted = false;
+		}
+
+		try {
+			// make sure that the error thread exits
+			// on Windows these threads sometimes get stuck and hang the
+			// execution
+			// timeout and join later after destroying the process.
+			errThread.join();
+			outThread.join();
+			errReader.close();
+			inReader.close();
+		} catch (InterruptedException ie) {
+			log.info(
+					"ShellExecutor: Interrupted while reading the error/out stream",
+					ie);
+		} catch (IOException ioe) {
+			log.warn("Error while closing the error/out stream", ioe);
+		}
+
 	}
 
 	/**
@@ -346,26 +470,6 @@ public class Actuator {
 		}
 		return nodesToCommission;
 
-	}
-
-	private static void close(InputStream anInput) {
-		try {
-			if (anInput != null) {
-				anInput.close();
-			}
-		} catch (IOException anExc) {
-			anExc.printStackTrace();
-		}
-	}
-
-	private static void close(OutputStream anOutput) {
-		try {
-			if (anOutput != null) {
-				anOutput.close();
-			}
-		} catch (IOException anExc) {
-			anExc.printStackTrace();
-		}
 	}
 
 }
