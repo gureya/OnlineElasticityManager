@@ -182,44 +182,12 @@ public class Actuator {
 			// ... don't forget to initialise in, out, and error,
 			// .... and consume the streams in separate threads!
 			_process.waitFor();
-
-			_in = _process.getInputStream();
-			InputStreamReader isr = new InputStreamReader(_in);
-			_err = _process.getErrorStream();
-			InputStreamReader esr = new InputStreamReader(_err);
-
-			if (_in != null) {
-				int n1;
-				char[] c1 = new char[1024];
-				StringBuffer standardOutput = new StringBuffer();
-				while ((n1 = isr.read(c1)) > 0) {
-					standardOutput.append(c1, 0, n1);
-				}
-				System.out.println("Standard Output: "
-						+ standardOutput.toString());
-
-			} else {
-				int n2;
-				char[] c2 = new char[1024];
-				StringBuffer standardError = new StringBuffer();
-				while ((n2 = esr.read(c2)) > 0) {
-					standardError.append(c2, 0, n2);
-				}
-				System.out.println("Standard Error: "
-						+ standardError.toString());
-			}
-		} finally {
-			if (_process != null) {
-				close(_process.getErrorStream());
-				close(_process.getOutputStream());
-				close(_process.getInputStream());
-				_process.destroy();
-				log.debug("[Process Exit Status], " + _process.exitValue());
-			}
-			close(_in);
-			close(_out);
-			close(_err);
-		}
+			log.debug("Script executed successfully");
+			
+		} catch (Exception e) {
+			log.debug("Script execution failed");
+		    e.printStackTrace();
+		  }
 	}
 
 	/**
@@ -245,45 +213,12 @@ public class Actuator {
 			// ... don't forget to initialise in, out, and error,
 			// .... and consume the streams in separate threads!
 			_process.waitFor();
+			log.debug("Script executed successfully");
 
-			_in = _process.getInputStream();
-			InputStreamReader isr = new InputStreamReader(_in);
-			_err = _process.getErrorStream();
-			InputStreamReader esr = new InputStreamReader(_err);
-
-			if (_in != null) {
-				int n1;
-				char[] c1 = new char[1024];
-				StringBuffer standardOutput = new StringBuffer();
-				while ((n1 = isr.read(c1)) > 0) {
-					standardOutput.append(c1, 0, n1);
-				}
-				System.out.println("Standard Output: "
-						+ standardOutput.toString());
-
-			} else {
-				int n2;
-				char[] c2 = new char[1024];
-				StringBuffer standardError = new StringBuffer();
-				while ((n2 = esr.read(c2)) > 0) {
-					standardError.append(c2, 0, n2);
-				}
-				System.out.println("Standard Error: "
-						+ standardError.toString());
-			}
-
-		} finally {
-			if (_process != null) {
-				close(_process.getErrorStream());
-				close(_process.getOutputStream());
-				close(_process.getInputStream());
-				_process.destroy();
-				log.debug("[Process Exit Status], " + _process.exitValue());
-			}
-			close(_in);
-			close(_out);
-			close(_err);
-		}
+		} catch (Exception e) {
+			log.debug("Script execution failed");
+		    e.printStackTrace();
+		  }
 	}
 
 	/**
