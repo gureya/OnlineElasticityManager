@@ -52,6 +52,9 @@ public class SelfElastManStart {
 	public static HashMap<Integer, Integer> rweights = new HashMap<Integer, Integer>();
 	public static HashMap<Integer, Integer> wweights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
+	
+	// for debugging keep track of winning prediction algorithms
+	private static int winner = 0;
 
 	// Testing the prediction with a sliding window
 	public static List<Double> readList = new ArrayList<Double>();
@@ -325,7 +328,8 @@ public class SelfElastManStart {
 							.convertIntegers(readList);
 					double[][] writeData = PredictorUtilities
 							.convertIntegers(writeList);
-
+					
+					
 					// Print prediction data into a file for analysis
 					// counter,realRead,predictedRead,realWrite,predictedWrite
 					String pfile = "pdata.txt";
@@ -334,7 +338,7 @@ public class SelfElastManStart {
 					pdata = global_timeseries_counter + "," + fineRead + ","
 							+ rpredictedValue + "," + fineWrite + ","
 							+ wpredictedValue + "," + Math.round(rPercentile)
-							+ "," + NUMBER_OF_SERVERS;
+							+ "," + NUMBER_OF_SERVERS + "," + winner;
 					OnlineModel.printtoFile(pfile, pdata);
 					global_timeseries_counter += 1;
 
@@ -389,6 +393,14 @@ public class SelfElastManStart {
 						}
 
 						// For Debugging
+						int maxValueInWeights = (Collections.max(rweights.values()));
+						for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+							if (entry.getValue() == maxValueInWeights) {
+								winner = entry.getKey();
+								break; // pick the first winner. fix this
+							}
+						}
+						
 						String rw = "\nWeights:";
 						for (Entry<Integer, Integer> entry : rweights
 								.entrySet()) {
@@ -547,8 +559,7 @@ public class SelfElastManStart {
 						log.debug("...Not enough training data available to get the current system model and carry out actuation...");
 
 					log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-				} catch (IOException | MatlabInvocationException
-						| InterruptedException e) {
+				} catch (IOException | MatlabInvocationException | InterruptedException e) {
 					// TODO Auto-generated catch block
 					log.debug("Timer Task Aborted with Errors...!%n: "
 							+ e.getMessage());
