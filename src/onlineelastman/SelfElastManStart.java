@@ -207,6 +207,9 @@ public class SelfElastManStart {
 	}
 
 	class PeriodicExecutor extends TimerTask {
+		/* (non-Javadoc)
+		 * @see java.util.TimerTask#run()
+		 */
 		@Override
 		public void run() {
 			log.debug("Timer Task Started..!%n...Collecting Periodic Statistics");
@@ -335,12 +338,12 @@ public class SelfElastManStart {
 					String pfile = "pdata.txt";
 					String pdata = "";
 
-					pdata = global_timeseries_counter + "," + fineRead + ","
-							+ rpredictedValue + "," + fineWrite + ","
-							+ wpredictedValue + "," + Math.round(rPercentile)
-							+ "," + NUMBER_OF_SERVERS + "," + winner;
-					OnlineModel.printtoFile(pfile, pdata);
-					global_timeseries_counter += 1;
+//					pdata = global_timeseries_counter + "," + fineRead + ","
+//							+ rpredictedValue + "," + fineWrite + ","
+//							+ wpredictedValue + "," + Math.round(rPercentile)
+//							+ "," + NUMBER_OF_SERVERS + "," + winner;
+//					OnlineModel.printtoFile(pfile, pdata);
+//					global_timeseries_counter += 1;
 
 					// Prediction for the read throughput
 					// For Debugging
@@ -557,6 +560,13 @@ public class SelfElastManStart {
 
 					} else
 						log.debug("...Not enough training data available to get the current system model and carry out actuation...");
+					
+					pdata = global_timeseries_counter + "," + fineRead + ","
+							+ rpredictedValue + "," + fineWrite + ","
+							+ wpredictedValue + "," + Math.round(rPercentile)
+							+ "," + NUMBER_OF_SERVERS + "," + winner;
+					OnlineModel.printtoFile(pfile, pdata);
+					global_timeseries_counter += 1;
 
 					log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
 				} catch (IOException | MatlabInvocationException | InterruptedException e) {
