@@ -355,15 +355,23 @@ public class SelfElastManStart {
 
 					// Define the threshold of read data to at least make a
 					// prediction
-					if (readData.length > 0) {
+					if (readData.length > 5) {
 						rcurrentPredictions = MatlabControl.getPredictions(
 								proxy, rcurrentPredictions, readData);
-						log.debug("[Read Predictions], " + "\tavg: "
+						/*log.debug("[Read Predictions], " + "\tavg: "
 								+ rcurrentPredictions[0] + "\tmax: "
 								+ rcurrentPredictions[1] + "\tfft_value: "
 								+ rcurrentPredictions[2] + "\trt_value: "
 								+ rcurrentPredictions[3] + "\tsvm_value: "
 								+ rcurrentPredictions[4] + "\tminima: "
+								+ rcurrentPredictions[5]); */
+						
+						log.debug("[Read Predictions], " + "\tes: "
+								+ rcurrentPredictions[0] + "\tfoa: "
+								+ rcurrentPredictions[1] + "\trwa: "
+								+ rcurrentPredictions[2] + "\tdfoa: "
+								+ rcurrentPredictions[3] + "\tsoa: "
+								+ rcurrentPredictions[4] + "\treg_trees: "
 								+ rcurrentPredictions[5]);
 						// Run the Weighted Majority Algorithm(WMA) and get the
 						// predicted values
@@ -372,6 +380,8 @@ public class SelfElastManStart {
 						// Initialize the weights of all predictions to 1 [mean,
 						// max, fft, reg_trees, libsvm, min]; Only at the
 						// beginning
+						
+						//[es, foa, rwa, dfoa, soa, reg_trees]!
 
 						if (!rinitialWeights) {
 							for (int i = 0; i < NUM_OF_ALGS; i++) {
@@ -425,15 +435,23 @@ public class SelfElastManStart {
 
 					// Define the threshold of write data to at least make a
 					// prediction
-					if (writeData.length > 0) {
+					if (writeData.length > 5) {
 						wcurrentPredictions = MatlabControl.getPredictions(
 								proxy, wcurrentPredictions, writeData);
-						log.debug("[Write Predictions], " + "\tavg: "
+						/*log.debug("[Write Predictions], " + "\tavg: "
 								+ wcurrentPredictions[0] + "\tmax: "
 								+ wcurrentPredictions[1] + "\tfft_value: "
 								+ wcurrentPredictions[2] + "\trt_value: "
 								+ wcurrentPredictions[3] + "\tsvm_value: "
 								+ wcurrentPredictions[4] + "\tminima: "
+								+ wcurrentPredictions[5]);*/
+						
+						log.debug("[Write Predictions], " + "\tes: "
+								+ wcurrentPredictions[0] + "\tfoa: "
+								+ wcurrentPredictions[1] + "\trwa: "
+								+ wcurrentPredictions[2] + "\tdfoa: "
+								+ wcurrentPredictions[3] + "\tsoa: "
+								+ wcurrentPredictions[4] + "\treg_trees: "
 								+ wcurrentPredictions[5]);
 						// Get the predictedValue
 						if (!winitialWeights) {
