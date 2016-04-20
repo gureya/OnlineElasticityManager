@@ -41,10 +41,10 @@ maxReadTP=1010
 maxWriteTP=1010
 maxDataSize=10
 
-#The granularity of your dimensions
+- The granularity of your dimensions
 scale=50
 
-#Queue length for each data points 
+- Queue length for each data points 
 queueLength=10
 
 - Confidence Level in the number of sla violations. E.g. 10% of Sla violations
@@ -57,7 +57,7 @@ actuatorScriptsPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/actu
 currentDataSize=5
 - Expected target throughput per server
 targetThroughput=1000
-#Expected performance and response time reads and writes 99th percentile(us)
+- Expected performance and response time reads and writes 99th percentile(us)
 readResponseTime=5000
 - MINIMUM NUMBER OF SERVERS EXPECTED FOR THE KEY-VALUE STORE
 minServers=5
