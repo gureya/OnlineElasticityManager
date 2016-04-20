@@ -42,25 +42,25 @@ maxWriteTP=1010
 maxDataSize=10
 
 - The granularity of your dimensions
-scale=50
+> scale=50
 
 - Queue length for each data points 
-queueLength=10
+> queueLength=10
 
 - Confidence Level in the number of sla violations. E.g. 10% of Sla violations
-confLevel=0.1
+> confLevel=0.1
 - path to your matlab scripts
-matlabPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor
+> matlabPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor
 - path to your actuator scripts installations
-actuatorScriptsPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/actuator
+> actuatorScriptsPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/actuator
 - current DataSize. Consider getting this from the cloud side(in KB)
-currentDataSize=5
+> currentDataSize=5
 - Expected target throughput per server
-targetThroughput=1000
+> targetThroughput=1000
 - Expected performance and response time reads and writes 99th percentile(us)
-readResponseTime=5000
+> readResponseTime=5000
 - MINIMUM NUMBER OF SERVERS EXPECTED FOR THE KEY-VALUE STORE
-minServers=5
+> minServers=5
 - MAXIMUM NUMBER OF SERVERS EXPECTED FOR THE KEY-VALUE STORE
-maxServers=10
+> maxServers=10
 
