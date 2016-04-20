@@ -35,11 +35,10 @@ Below is a list of parameters that needs to be specified for the running of Onli
 - Periodic timer(in seconds) to pull statistics from the Cassandra Node
 timerWindow=10
 
-- Dimensions metrics: the Maximum Read and Write Throughput(ops/sec), DataSize(KB)
-Your MaxDimensions should be equal or greater than your scale 
-maxReadTP=1010
-maxWriteTP=1010
-maxDataSize=10
+- Dimensions metrics: the Maximum Read and Write Throughput(ops/sec), DataSize(KB), Your MaxDimensions should be equal or greater than your scale 
+> maxReadTP=1010
+> maxWriteTP=1010
+> maxDataSize=10
 
 - The granularity of your dimensions
 > scale=50
@@ -49,18 +48,25 @@ maxDataSize=10
 
 - Confidence Level in the number of sla violations. E.g. 10% of Sla violations
 > confLevel=0.1
+
 - path to your matlab scripts
 > matlabPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/predictor
+
 - path to your actuator scripts installations
 > actuatorScriptsPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/actuator
+
 - current DataSize. Consider getting this from the cloud side(in KB)
 > currentDataSize=5
+
 - Expected target throughput per server
 > targetThroughput=1000
+
 - Expected performance and response time reads and writes 99th percentile(us)
 > readResponseTime=5000
+
 - MINIMUM NUMBER OF SERVERS EXPECTED FOR THE KEY-VALUE STORE
 > minServers=5
+
 - MAXIMUM NUMBER OF SERVERS EXPECTED FOR THE KEY-VALUE STORE
 > maxServers=10
 
