@@ -55,7 +55,7 @@ timerWindow=10
 - path to your actuator scripts installations
 > actuatorScriptsPath=/Users/GUREYA/Documents/workspace/ElasticityManager/src/actuator
 
-- current DataSize. Consider getting this from the cloud side(in KB)
+- current DataSize. Consider getting this from the cloud side (in KB)
 > currentDataSize=5
 
 - Expected target throughput per server
