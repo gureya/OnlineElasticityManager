@@ -7,6 +7,7 @@ import java.util.Queue;
  *
  */
 public class OnlineModelMetrics {
+
 	private int rThroughput; // Read Throughput(ops/sec)
 	private int wThroughput; // Write Throughput(ops/sec)
 	private int datasize;
@@ -68,7 +69,7 @@ public class OnlineModelMetrics {
 		return valid;
 	}
 
-	// The setters are needed if you have a warm data
+	// The setters are needed if you have a warmup data
 	public void setValid(boolean valid) {
 		this.valid = valid;
 	}

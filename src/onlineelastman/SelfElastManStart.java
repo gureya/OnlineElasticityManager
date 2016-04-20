@@ -24,8 +24,11 @@ import predictor.PredictorUtilities;
  */
 public class SelfElastManStart {
 
-	// Default configurations for Online Elastman overwritten by the config
-	// properties
+	/*
+	 * Default configurations for OnlineElastman overwritten by the config
+	 * properties at resources/config.properties
+	 */
+
 	public static int timerWindow = 5;
 	public static OnlineModelMetrics[][][] dataPoints;
 	public static int scale = 50;
@@ -40,8 +43,11 @@ public class SelfElastManStart {
 	public static int readResponseTime = 5000;
 	public static int targetThroughput = 1000; // target throughput per server
 
-	// Variables used by Predictor Modules (r for reads && w for writes)
-	// Initialized to the number of algorithms
+	/*
+	 * Variables used by Predictor Modules (r for reads && w for writes)
+	 * Initialized to the number of algorithms
+	 */
+
 	public static final int NUM_OF_ALGS = 6;
 	public static double[] rpreviousPredictions = new double[NUM_OF_ALGS];
 	public static double[] wpreviousPredictions = new double[NUM_OF_ALGS];
@@ -52,7 +58,7 @@ public class SelfElastManStart {
 	public static HashMap<Integer, Integer> rweights = new HashMap<Integer, Integer>();
 	public static HashMap<Integer, Integer> wweights = new HashMap<Integer, Integer>();
 	public static MatlabProxy proxy;
-	
+
 	// for debugging keep track of winning prediction algorithms
 	private static int winner = 0;
 
@@ -66,21 +72,24 @@ public class SelfElastManStart {
 	public static int MIN_NUMBER_OF_SERVERS = 3;
 	public static int MAX_NUMBER_OF_SERVERS = 10;
 
-	// Disable the controller during the data balance operation as this causes
-	// and extra amount of load in the system
+	/*
+	 * Disable the controller during the data rebalance operation as this causes
+	 * an extra amount of load in the system
+	 */
 	public static boolean CONTROLLER_DISABLED = false;
 
 	static Logger log = Logger.getLogger(SelfElastManStart.class);
 	Timer timer;
 
-	// parameters for setting the datapoints grid - 3D (r(reads), w(writes),
-	// d(datasize))
+	/*
+	 * parameters for setting the datapoints grid - 3D (r(reads), w(writes),
+	 * d(datasize))
+	 */
 	private int rstart;
 	private int wstart;
 	private int rend;
 	private int wend;
-	// private int dstart;
-	// private int dend;
+
 	private int fineRead;
 	private int fineWrite;
 	private int fineDataSize;
@@ -91,6 +100,8 @@ public class SelfElastManStart {
 	long global_timeseries_counter = 0;
 
 	/**
+	 * 
+	 * 
 	 * @param timerWindow
 	 * @throws MatlabInvocationException
 	 */
@@ -98,10 +109,16 @@ public class SelfElastManStart {
 		timer = new Timer();
 		log.info("Starting the Online Autonomic Controller...");
 
-		// Read from the config properties if any
+		/*
+		 * Read from the config properties if any defined in the
+		 * resources/config.properties file
+		 */
 		Utilities properties = new Utilities();
+
 		try {
+
 			properties.getProperties();
+
 			timerWindow = Integer.parseInt(properties.timerWindow.trim());
 			maxReadTP = Integer.parseInt(properties.maxReadTP.trim());
 			maxWriteTP = Integer.parseInt(properties.maxWriteTP.trim());
@@ -125,10 +142,13 @@ public class SelfElastManStart {
 
 			// Initialize the datapoint grids
 			dataPoints = new OnlineModelMetrics[maxReadTP][maxWriteTP][maxDataSize];
+
 			// Get initial number of servers for the all system
 			nodesMap = Actuator.getCassandraInstances();
+
 			// Set the maximum number of servers
 			MAX_NUMBER_OF_SERVERS = nodesMap.size();
+
 			// Initialize the active number of servers
 			NUMBER_OF_SERVERS = Actuator.getCurrentNoServers(nodesMap);
 
@@ -136,6 +156,7 @@ public class SelfElastManStart {
 					+ NUMBER_OF_SERVERS);
 			log.info("[Minimum Number of Servers], " + MIN_NUMBER_OF_SERVERS);
 			log.info("[Maximum Number of Servers], " + MAX_NUMBER_OF_SERVERS);
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -149,16 +170,19 @@ public class SelfElastManStart {
 		log.info(message);
 
 		try {
+
 			startMatlabControl();
 			log.info("MatlabControl successfully instantiated...");
+
 		} catch (MatlabConnectionException e) { // TODO Auto-generated catch
 												// block
 			e.printStackTrace();
 			log.fatal("Failed instantiating the MatlabControl...");
 		}
 
-		// /Testing the warm up phase // Testing the system with an existing
-		// data
+		/*
+		 * Testing the warm up phase,,,Testing the system with an existing data
+		 */
 		PredictorUtilities pu = new PredictorUtilities();
 		dataPoints = pu.readDataFile(dataPoints);
 
@@ -191,6 +215,7 @@ public class SelfElastManStart {
 
 	public static void startMatlabControl() throws MatlabConnectionException,
 			MatlabInvocationException {
+
 		// Set the matlab factory setting from opening every now and again
 		MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
 				.setUsePreviouslyControlledSession(true).setHidden(true)
@@ -204,17 +229,23 @@ public class SelfElastManStart {
 		proxy.setVariable("matlabPath", matlabPath);
 		log.debug("[MatlabPath], " + matlabPath);
 		proxy.eval("addpath(matlabPath)");
+
 	}
 
 	class PeriodicExecutor extends TimerTask {
-		/* (non-Javadoc)
+		/*
+		 * This class executes the controller periodically depending on the user
+		 * defined window!
+		 * 
 		 * @see java.util.TimerTask#run()
 		 */
 		@Override
 		public void run() {
+
 			log.debug("Timer Task Started..!%n...Collecting Periodic Statistics");
 
 			if (!CONTROLLER_DISABLED) {
+
 				double rThroughput = 0;
 				double wThroughput = 0;
 				double rPercentile = 0;
@@ -222,34 +253,47 @@ public class SelfElastManStart {
 				int roperations = 0;
 				int woperations = 0;
 
-				// Average dataSize Need to find a way to get from the Cassandra
-				// Cluster! currently just changing it from config!
+				/*
+				 * Average dataSize Need to find a way to get from the Cassandra
+				 * Cluster! currently just changing it from config!
+				 */
 				double dataSize = 1;
 
 				DataStatistics statsArray[];
+
 				try {
+
 					statsArray = DataCollector.collectCassandraStats();
+
 					if (!Double.isNaN(statsArray[0].getThroughput()))
 						rThroughput = statsArray[0].getThroughput();
+
 					if (!Double.isNaN(statsArray[1].getThroughput()))
 						wThroughput = statsArray[1].getThroughput();
+
 					if (!Double.isNaN(statsArray[0].getNnPctLatency()))
 						rPercentile = statsArray[0].getNnPctLatency();
+
 					if (!Double.isNaN(statsArray[1].getNnPctLatency()))
 						wPercentile = statsArray[1].getNnPctLatency();
+
 					if (!Double.isNaN(statsArray[0].getDataSize()))
 						dataSize = statsArray[0].getDataSize();
+
 					if (!Double.isNaN(statsArray[0].getNoRequests()))
 						roperations = (int) statsArray[0].getNoRequests();
+
 					if (!Double.isNaN(statsArray[1].getNoRequests()))
 						woperations = (int) statsArray[1].getNoRequests();
 
 					dataSize = currentDataSize; // Variation was done using the
-												// ycsb
-												// client, Default 1KB
+												// ycsb client, Default 1KB
+
 					if (roperations == 0 && woperations == 0) {
 						log.info("No New dataStatitistics found...Zero operations reported");
+
 					} else {
+
 						// My throughput calculations here
 						/*
 						 * System.out .println(
@@ -293,8 +337,10 @@ public class SelfElastManStart {
 								+ "\t 99thPercentileLatency(us), "
 								+ wPercentile);
 
-						// Test for the OnlineModel --- Updating the Online
-						// Model
+						/*
+						 * Test for the OnlineModel --- Updating the Online
+						 * Model
+						 */
 						Queue<Integer> rqe = new LinkedList<Integer>();
 						Queue<Integer> wqe = new LinkedList<Integer>();
 
@@ -309,32 +355,36 @@ public class SelfElastManStart {
 						// OnlineModelMetrics[dataPoints.length];
 						dataPoints = OnlineModel.buildModel(dataPoints, omm,
 								global_timeseries_counter);
+
 						// System.arraycopy(newdataPoints, 0, dataPoints, 0,
 						// dataPoints.length);
 					}
 
 					long start = System.nanoTime();
-					// Test for the Predictor
-					// Get predictions for time t+1
-					// Convert reads and writes into two dimensional array to be
-					// sent to the matlab scripts
-					// Arrays in MATLAB are always at least two dimensions, so
-					// the lowest
-					// dimension Java array that can be sent to MATLAB is a
-					// double[][]
 
-					// Keep track of the read and write prediction in a list
-					// (Prediction_Data)
+					/*
+					 * Test for the Predictor: Get predictions for time t+1;
+					 * Convert reads and writes into two dimensional array to be
+					 * sent to the matlab scripts; Arrays in MATLAB are always
+					 * at least two dimensions, so the lowest dimension Java
+					 * array that can be sent to MATLAB is a double[][]
+					 */
+
+					/*
+					 * Keep track of the read and write predictions in a list
+					 * (Prediction_Data)
+					 */
 					readList.add((double) fineRead);
 					writeList.add((double) fineWrite);
 					double[][] readData = PredictorUtilities
 							.convertIntegers(readList);
 					double[][] writeData = PredictorUtilities
 							.convertIntegers(writeList);
-					
-					
-					// Print prediction data into a file for analysis
-					// counter,realRead,predictedRead,realWrite,predictedWrite
+
+					/*
+					 * Print prediction data into a file for analysis
+					 * counter,realRead,predictedRead,realWrite,predictedWrite
+					 */
 					String pfile = "pdata.txt";
 					String pdata = "";
 
@@ -345,27 +395,30 @@ public class SelfElastManStart {
 					OnlineModel.printtoFile(pfile, pdata);
 					global_timeseries_counter += 1;
 
-					// Prediction for the read throughput
-					// For Debugging
+					/* Prediction for the read throughput: For Debugging */
 					String rpp = "Read Previous Predictions: ";
 					for (int i = 0; i < rpreviousPredictions.length; i++) {
 						rpp += "\t" + rpreviousPredictions[i];
 					}
 					log.debug(rpp);
 
-					// Define the threshold of read data to at least make a
-					// prediction
+					/*
+					 * Define the threshold of read data to at least make a
+					 * prediction
+					 */
 					if (readData.length > 5) {
 						rcurrentPredictions = MatlabControl.getPredictions(
 								proxy, rcurrentPredictions, readData);
-						/*log.debug("[Read Predictions], " + "\tavg: "
-								+ rcurrentPredictions[0] + "\tmax: "
-								+ rcurrentPredictions[1] + "\tfft_value: "
-								+ rcurrentPredictions[2] + "\trt_value: "
-								+ rcurrentPredictions[3] + "\tsvm_value: "
-								+ rcurrentPredictions[4] + "\tminima: "
-								+ rcurrentPredictions[5]); */
-						
+						/*
+						 * log.debug("[Read Predictions], " + "\tavg: " +
+						 * rcurrentPredictions[0] + "\tmax: " +
+						 * rcurrentPredictions[1] + "\tfft_value: " +
+						 * rcurrentPredictions[2] + "\trt_value: " +
+						 * rcurrentPredictions[3] + "\tsvm_value: " +
+						 * rcurrentPredictions[4] + "\tminima: " +
+						 * rcurrentPredictions[5]);
+						 */
+
 						log.debug("[Read Predictions], " + "\tes: "
 								+ rcurrentPredictions[0] + "\tfoa: "
 								+ rcurrentPredictions[1] + "\trwa: "
@@ -373,15 +426,16 @@ public class SelfElastManStart {
 								+ rcurrentPredictions[3] + "\tsoa: "
 								+ rcurrentPredictions[4] + "\treg_trees: "
 								+ rcurrentPredictions[5]);
-						// Run the Weighted Majority Algorithm(WMA) and get the
-						// predicted values
-						// The actual values for the current window : fineRead &
-						// fineWrite
-						// Initialize the weights of all predictions to 1 [mean,
-						// max, fft, reg_trees, libsvm, min]; Only at the
-						// beginning
-						
-						//[es, foa, rwa, dfoa, soa, reg_trees]!
+
+						/*
+						 * Run the Weighted Majority Algorithm(WMA) and get the
+						 * predicted values The actual values for the current
+						 * window : fineRead & fineWrite Initialize the weights
+						 * of all predictions to 1 [mean, max, fft, reg_trees,
+						 * libsvm, min]; Only at the beginning
+						 * 
+						 * [es, foa, rwa, dfoa, soa, reg_trees]!
+						 */
 
 						if (!rinitialWeights) {
 							for (int i = 0; i < NUM_OF_ALGS; i++) {
@@ -391,11 +445,14 @@ public class SelfElastManStart {
 							}
 							rpredictedValue = PredictorUtilities
 									.mean(rcurrentPredictions);
+
 							// Update the previous predictions
 							System.arraycopy(rcurrentPredictions, 0,
 									rpreviousPredictions, 0,
 									rpreviousPredictions.length);
+
 							rinitialWeights = true;
+
 						} else {
 							PredictorMetrics rpm = MatlabControl.runWMA(
 									rpreviousPredictions, rcurrentPredictions,
@@ -406,14 +463,16 @@ public class SelfElastManStart {
 						}
 
 						// For Debugging
-						int maxValueInWeights = (Collections.max(rweights.values()));
-						for (Entry<Integer, Integer> entry : rweights.entrySet()) {
+						int maxValueInWeights = (Collections.max(rweights
+								.values()));
+						for (Entry<Integer, Integer> entry : rweights
+								.entrySet()) {
 							if (entry.getValue() == maxValueInWeights) {
 								winner = entry.getKey();
 								break; // pick the first winner. fix this
 							}
 						}
-						
+
 						String rw = "\nWeights:";
 						for (Entry<Integer, Integer> entry : rweights
 								.entrySet()) {
@@ -433,19 +492,23 @@ public class SelfElastManStart {
 					}
 					log.debug(wpp);
 
-					// Define the threshold of write data to at least make a
-					// prediction
+					/*
+					 * Define the threshold of write data to at least make a
+					 * prediction
+					 */
 					if (writeData.length > 5) {
 						wcurrentPredictions = MatlabControl.getPredictions(
 								proxy, wcurrentPredictions, writeData);
-						/*log.debug("[Write Predictions], " + "\tavg: "
-								+ wcurrentPredictions[0] + "\tmax: "
-								+ wcurrentPredictions[1] + "\tfft_value: "
-								+ wcurrentPredictions[2] + "\trt_value: "
-								+ wcurrentPredictions[3] + "\tsvm_value: "
-								+ wcurrentPredictions[4] + "\tminima: "
-								+ wcurrentPredictions[5]);*/
-						
+						/*
+						 * log.debug("[Write Predictions], " + "\tavg: " +
+						 * wcurrentPredictions[0] + "\tmax: " +
+						 * wcurrentPredictions[1] + "\tfft_value: " +
+						 * wcurrentPredictions[2] + "\trt_value: " +
+						 * wcurrentPredictions[3] + "\tsvm_value: " +
+						 * wcurrentPredictions[4] + "\tminima: " +
+						 * wcurrentPredictions[5]);
+						 */
+
 						log.debug("[Write Predictions], " + "\tes: "
 								+ wcurrentPredictions[0] + "\tfoa: "
 								+ wcurrentPredictions[1] + "\trwa: "
@@ -453,6 +516,7 @@ public class SelfElastManStart {
 								+ wcurrentPredictions[3] + "\tsoa: "
 								+ wcurrentPredictions[4] + "\treg_trees: "
 								+ wcurrentPredictions[5]);
+
 						// Get the predictedValue
 						if (!winitialWeights) {
 							for (int i = 0; i < NUM_OF_ALGS; i++) {
@@ -462,6 +526,7 @@ public class SelfElastManStart {
 							}
 							wpredictedValue = PredictorUtilities
 									.mean(wcurrentPredictions);
+
 							// Update the previous predictions
 							System.arraycopy(wcurrentPredictions, 0,
 									wpreviousPredictions, 0,
@@ -492,8 +557,10 @@ public class SelfElastManStart {
 					log.debug("Elapsed Time(ms) for predictions: "
 							+ ((System.nanoTime() - start) / 1000000));
 
-					// Testing the trained system model
-					// Model TrainingData - Reading from a config file
+					/*
+					 * Testing the trained system model Model TrainingData -
+					 * Reading from a config file
+					 */
 					PredictorMetrics data2dArray = PredictorUtilities
 							.getDataIn2DArray(dataPoints);
 
@@ -506,10 +573,12 @@ public class SelfElastManStart {
 					log.debug("[Current Number of Servers] "
 							+ NUMBER_OF_SERVERS);
 
-					// At least determine a threshold for the training data to
-					// get
-					// the system model
+					/*
+					 * At least determine a threshold for the training data to
+					 * get the system model
+					 */
 					if (reads.length > 0) {
+
 						// Get the primal variables w, b from the model
 						double[] primalVariables = OnlineModel.getUpdatedModel(
 								proxy, reads, writes, dszs, trainingLabels);
@@ -536,8 +605,11 @@ public class SelfElastManStart {
 									log.info("Data rebalance start taking place...Disabling the controller");
 
 									Actuator.decommissionInstances(nodesToDecommission);
-									// Update the current nodesMap assuming
-									// decommissioning happened sucessfully
+
+									/*
+									 * Update the current nodesMap assuming
+									 * decommissioning happened sucessfully
+									 */
 									nodesMap = Actuator.updateCurrentNoservers(
 											nodesToDecommission, nodesMap, 0);
 
@@ -558,13 +630,16 @@ public class SelfElastManStart {
 
 									CONTROLLER_DISABLED = true;
 									log.info("Data rebalance started...Disabling the controller");
-									
+
 									Actuator.commissionInstances(nodesToCommission);
 
-									// Update the current nodesMap assuming //
-									// commissioning happened sucessfully
+									/*
+									 * Update the current nodesMap assuming
+									 * commissioning happened sucessfully
+									 */
 									nodesMap = Actuator.updateCurrentNoservers(
 											nodesToCommission, nodesMap, 1);
+
 									// Update the current number of servers
 									NUMBER_OF_SERVERS = Actuator
 											.getCurrentNoServers(nodesMap);
@@ -578,16 +653,17 @@ public class SelfElastManStart {
 
 					} else
 						log.debug("...Not enough training data available to get the current system model and carry out actuation...");
-					
-					//pdata = global_timeseries_counter + "," + fineRead + ","
-					//		+ rpredictedValue + "," + fineWrite + ","
-					//		+ wpredictedValue + "," + Math.round(rPercentile)
-					//		+ "," + NUMBER_OF_SERVERS + "," + winner;
-					//OnlineModel.printtoFile(pfile, pdata);
-					//global_timeseries_counter += 1;
+
+					// pdata = global_timeseries_counter + "," + fineRead + ","
+					// + rpredictedValue + "," + fineWrite + ","
+					// + wpredictedValue + "," + Math.round(rPercentile)
+					// + "," + NUMBER_OF_SERVERS + "," + winner;
+					// OnlineModel.printtoFile(pfile, pdata);
+					// global_timeseries_counter += 1;
 
 					log.debug("Timer Task Finished..!%n...Collecting Periodic DataStatistics");
-				} catch (IOException | MatlabInvocationException | InterruptedException e) {
+				} catch (IOException | MatlabInvocationException
+						| InterruptedException e) {
 					// TODO Auto-generated catch block
 					log.debug("Timer Task Aborted with Errors...!%n: "
 							+ e.getMessage());
@@ -595,7 +671,8 @@ public class SelfElastManStart {
 				}
 			} else {
 				try {
-					DataStatistics statsArray[] = DataCollector.collectCassandraStats();
+					DataStatistics statsArray[] = DataCollector
+							.collectCassandraStats();
 					log.debug("Clearing the collected metrics after data rebalance");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block

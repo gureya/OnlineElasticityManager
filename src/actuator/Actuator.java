@@ -23,8 +23,11 @@ public class Actuator {
 	static OutputStream _out = null;
 	static InputStream _err = null;
 
-	// TODO A lot of maths going on in this function need a careful testing and
-	// error handling
+	/*
+	 * TODO: WARNING: A lot of 3D VECTOR maths going on in this function; need a
+	 * careful testing and error handling
+	 */
+
 	/**
 	 * Get the Extra number of servers required to keep the Cassandra Cluster at
 	 * optimal performance
@@ -42,12 +45,15 @@ public class Actuator {
 
 		int NEW_NUMBER_OF_SERVERS = 0;
 		int extraServers = 0;
-		// variables needed to calculate the equation of the
-		// System model
+
+		/*
+		 * variables needed to calculate the equation of the System model
+		 */
 		double w1 = primalVariables[0];
 		double w2 = primalVariables[1];
 		double w3 = primalVariables[2];
 		double b = primalVariables[3];
+
 		log.debug("[SYSTEM PRIMAL VARIABLES]\tw1 " + w1 + "\tw2 " + w2
 				+ "\tw3 " + w3 + "\tb " + b);
 		double xmin = primalVariables[4]; // determine the system bounds
@@ -72,8 +78,10 @@ public class Actuator {
 		// y = yy0 + (s*k1);
 		// z = zz0 + (s*(zz1 - zz0));
 
-		// Get the equation of your current point connected to
-		// the origin
+		/*
+		 * Get the equation of your current point connected to the origin
+		 */
+
 		// The current point
 		double x0 = rpredictedValue;
 		double y0 = wpredictedValue;
@@ -94,17 +102,18 @@ public class Actuator {
 		// Compute the Intersection point from the two equations
 		double t = ((k0 * (yy0 - y0)) + (k1 * (x0 - xx0)))
 				/ ((k0 * p1) - (k1 * p0));
+
 		// double s = ((x0 + (t * p0) - xx0)) / k0;
 		// Compute the Intersection point from s and t
 		double xIntersect = x0 + (t * p0); // Optimized reads
 		double yIntersect = y0 + (t * p1); // Optimized writes
 		double zIntersect = z0 + (t * (z1 - z0)); // current datasize
+
 		log.debug("Optimized read throughput: " + xIntersect
 				+ " Optimized write throughput: " + yIntersect
 				+ " current datasize: " + zIntersect);
 
-		// Calculate the total throughput and the optimized
-		// throughput
+		// Calculate the total throughput and the optimized throughput
 		double predictedThroughput = (rpredictedValue + wpredictedValue);
 		double predictedTotalThroughtput = ((predictedThroughput) * NUMBER_OF_SERVERS); // predicted
 																						// total
@@ -117,16 +126,18 @@ public class Actuator {
 																// throughput
 																// per
 																// server
-		// TODO Set a threshold to only trigger actuation if
-		// there is a large change in throughput
-		// Use the known target throughput per server to determine this
-		// 5% of the total throughput of one server
+		/*
+		 * TODO Set a threshold to only trigger actuation if there is a large
+		 * change in throughput. Use the known target throughput per server to
+		 * determine this e.g. 5% of the total throughput of one server
+		 */
 		int deadzone = Math
 				.abs((int) (predictedThroughput - optimizedThroughput));
 
 		// System.out.println("PredictedTotalThroughput: " +
 		// predictedThroughput);
 		// System.out.println("DeadZone is: " + deadzone);
+
 		// Calculate the new number of servers
 		NEW_NUMBER_OF_SERVERS = (int) Math
 				.ceil((predictedTotalThroughtput / optimizedThroughput));
@@ -137,6 +148,7 @@ public class Actuator {
 		// check if the new set of servers exceed the minimum and maximum
 		// number
 		// of available servers
+
 		if (NEW_NUMBER_OF_SERVERS <= SelfElastManStart.MIN_NUMBER_OF_SERVERS) {
 			log.debug("New number of servers should not be less or equal to minimum number of servers to carry out the actuation");
 			NEW_NUMBER_OF_SERVERS = SelfElastManStart.MIN_NUMBER_OF_SERVERS;
@@ -156,8 +168,11 @@ public class Actuator {
 		return extraServers;
 	}
 
-	// TODO Combine the following two functions as they are kind of repetitive
-	// passing the script to execute as an argument
+	/*
+	 * TODO: Combine the following two functions as they are kind of repetitive
+	 * passing the script to execute as an argument
+	 */
+
 	/**
 	 * Decommission Cassandra Instances
 	 * 
@@ -234,10 +249,12 @@ public class Actuator {
 		}
 
 		try {
-			// make sure that the error thread exits
-			// on Windows these threads sometimes get stuck and hang the
-			// execution
-			// timeout and join later after destroying the process.
+
+			/*
+			 * make sure that the error thread exits on Windows these threads
+			 * sometimes get stuck and hang the execution timeout and join later
+			 * after destroying the process.
+			 */
 			errThread.join();
 			outThread.join();
 			errReader.close();
@@ -327,10 +344,12 @@ public class Actuator {
 		}
 
 		try {
-			// make sure that the error thread exits
-			// on Windows these threads sometimes get stuck and hang the
-			// execution
-			// timeout and join later after destroying the process.
+
+			/*
+			 * make sure that the error thread exits on Windows these threads
+			 * sometimes get stuck and hang the execution timeout and join later
+			 * after destroying the process.
+			 */
 			errThread.join();
 			outThread.join();
 			errReader.close();
@@ -348,10 +367,10 @@ public class Actuator {
 	/**
 	 * Get initial Cassandra instances from a configuration
 	 * 
-	 * @return
+	 * @return nodesMap
 	 */
 	public static HashMap<String, Integer> getCassandraInstances() {
-		String csvFile = "cassandra_nodes.txt";
+		String csvFile = "data/List_of_CassandraNodes.txt";
 		BufferedReader br = null;
 		String line = "";
 		String cvsSplitBy = ",";

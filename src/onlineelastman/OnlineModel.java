@@ -21,6 +21,14 @@ public class OnlineModel {
 	// for debugging
 	private static PrintWriter out;
 
+	/**
+	 * Building the online Model
+	 * 
+	 * @param dataPoints
+	 * @param omm
+	 * @param global_timeseries_counter
+	 * @return updated dataPoints
+	 */
 	public static OnlineModelMetrics[][][] buildModel(
 			OnlineModelMetrics[][][] dataPoints, OnlineModelMetrics omm,
 			long global_timeseries_counter) {
@@ -32,22 +40,33 @@ public class OnlineModel {
 		String data = "";
 		String file = "data.txt";
 
-		// Assume that maximum datasize dont exceed maxReadTP or maxWriteTP
+		/*
+		 * Assume that maximum datasize dont exceed MaximumReadThroughPut or
+		 * MaximumWriteThroughPut
+		 */
 		if (i < SelfElastManStart.maxReadTP && j < SelfElastManStart.maxWriteTP) {
 			if (dataPoints[i][j][k] != null) {
 
 				log.debug("Point already exist,,,Just updating the respective Queues");
-				int l = 0; // keep track of the violations
-				// Update the Read Queue
-				// TODO: Move this to a function
+				int l = 0;
+
+				/*
+				 * keep track of the violations Update the Read Queue TODO: Move
+				 * this to a function
+				 */
 				if (dataPoints[i][j][k].getrQueue().size() >= SelfElastManStart.queueLength) {
+
 					// Remove the first element added to the queue
 					dataPoints[i][j][k].getrQueue().remove();
+
 					// Then update the queue with the current value
 					dataPoints[i][j][k].getrQueue()
 							.add((int) omm.getRlatency());
-					// Check if the point violates the sla with regard to the
-					// confLevel
+
+					/*
+					 * Check if the point violates the sla with regard to the
+					 * confLevel
+					 */
 					for (Object object : dataPoints[i][j][k].getrQueue()) {
 						if ((Integer) object > SelfElastManStart.readResponseTime)
 							l++;
@@ -62,10 +81,14 @@ public class OnlineModel {
 					}
 
 				} else {
+
 					dataPoints[i][j][k].getrQueue()
 							.add((int) omm.getRlatency());
-					// Check if the point violates the sla with regard to the
-					// confLevel
+
+					/*
+					 * Check if the point violates the sla with regard to the
+					 * confLevel
+					 */
 					for (Object object : dataPoints[i][j][k].getrQueue()) {
 						if ((Integer) object > SelfElastManStart.readResponseTime)
 							l++;
@@ -80,12 +103,15 @@ public class OnlineModel {
 					}
 				}
 
-				// Update the Write Queue
-				// TODO: Update the sla violations for writes
-				// TODO: Move this to a function
+				/*
+				 * Update the Write Queue TODO: Update the sla violations for
+				 * writes TODO: Move this to a function
+				 */
 				if (dataPoints[i][j][k].getwQueue().size() >= SelfElastManStart.queueLength) {
+
 					// Remove the first element added to the queue
 					dataPoints[i][j][k].getwQueue().remove();
+
 					// Then update the queue with the current value
 					dataPoints[i][j][k].getwQueue()
 							.add((int) omm.getWlatency());
@@ -94,8 +120,10 @@ public class OnlineModel {
 							.add((int) omm.getWlatency());
 				}
 
-				// for debugging...print each and every record to a file
-				// (whether new or existing)!!
+				/*
+				 * for debugging...print each and every record to a file
+				 * (whether new or existing)!!
+				 */
 				int valid = (dataPoints[i][j][k].isValid()) ? 1 : -1;
 				data = global_timeseries_counter + "," + omm.getrThroughput()
 						+ "," + omm.getwThroughput() + "," + omm.getDatasize()
@@ -105,10 +133,12 @@ public class OnlineModel {
 				printtoFile(file, data);
 
 			} else {
+
 				// Add to the data points
 				log.debug("New data point,,,Adding to the datapoints");
 
 				dataPoints[i][j][k] = omm;
+
 				// check for sla violations
 				if (dataPoints[i][j][k].getRlatency() > SelfElastManStart.readResponseTime) {
 					dataPoints[i][j][k].setValid(false);
@@ -138,6 +168,18 @@ public class OnlineModel {
 		return dataPoints;
 	}
 
+	/**
+	 * 
+	 * Get the updated system model at a specified time
+	 * 
+	 * @param proxy
+	 * @param reads
+	 * @param writes
+	 * @param dszs
+	 * @param trainingLabels
+	 * @return Updated system model at time t
+	 * @throws MatlabInvocationException
+	 */
 	public static double[] getUpdatedModel(MatlabProxy proxy, double[][] reads,
 			double[][] writes, double[][] dszs, double[][] trainingLabels)
 			throws MatlabInvocationException {
@@ -170,8 +212,10 @@ public class OnlineModel {
 
 	}
 
-	// for debugging print the datapoints to a file for analysis (all the
-	// changes taking place in a datapoint)
+	/*
+	 * for debugging print the datapoints to a file for analysis (all the
+	 * changes taking place in a datapoint)
+	 */
 	public static void printtoFile(String file, String data) {
 
 		try {

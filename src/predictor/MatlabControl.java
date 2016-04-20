@@ -39,13 +39,17 @@ public class MatlabControl {
 				timeseries, null));
 
 		// Execute the prediction algorithms in Matlab via the proxy
-		/*proxy.eval("[avg] = average(reads)");
-		proxy.eval("[maxima] = maximum(reads)");
-		proxy.eval("[fft_value, pattern] = fft_func(reads)");
-		proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)");
-		proxy.eval("[svm_value, accuracy, decision_values] = svm(timeseries, reads, nextWindow)");
-		proxy.eval("[minima] = minimum(reads)");*/
-		
+
+		/*
+		 * proxy.eval("[avg] = average(reads)");
+		 * proxy.eval("[maxima] = maximum(reads)");
+		 * proxy.eval("[fft_value, pattern] = fft_func(reads)");
+		 * proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)"
+		 * ); proxy.eval(
+		 * "[svm_value, accuracy, decision_values] = svm(timeseries, reads, nextWindow)"
+		 * ); proxy.eval("[minima] = minimum(reads)");
+		 */
+
 		proxy.eval("[es] = exponentialSmoothing(reads)");
 		proxy.eval("[foa] = firstOrderArima(reads)");
 		proxy.eval("[rwa] = randomWalkArima(reads)");
@@ -53,29 +57,39 @@ public class MatlabControl {
 		proxy.eval("[soa] = secondOrderArima(reads)");
 		proxy.eval("[rt_value] = regression_tree(timeseries, reads, nextWindow)");
 
-		// Get the current predictions for time t+1; order:[mean, max, fft,
-		// reg_trees, libsvm, min]
-		/*currentPredictions[0] = ((double[]) proxy.getVariable("avg"))[0];
-		currentPredictions[1] = ((double[]) proxy.getVariable("maxima"))[0];
-		currentPredictions[2] = ((double[]) proxy.getVariable("fft_value"))[0];
-		currentPredictions[3] = ((double[]) proxy.getVariable("rt_value"))[0];
-		currentPredictions[4] = ((double[]) proxy.getVariable("svm_value"))[0];
-		currentPredictions[5] = ((double[]) proxy.getVariable("minima"))[0];*/
-		
-		// Get the current predictions for time t+1; order:[es, foa, rwa, dfoa, soa, reg_trees]!
+		/*
+		 * Get the current predictions for time t+1; order:[mean, max, fft,
+		 * reg_trees, libsvm, min]
+		 */
+
+		/*
+		 * currentPredictions[0] = ((double[]) proxy.getVariable("avg"))[0];
+		 * currentPredictions[1] = ((double[]) proxy.getVariable("maxima"))[0];
+		 * currentPredictions[2] = ((double[])
+		 * proxy.getVariable("fft_value"))[0]; currentPredictions[3] =
+		 * ((double[]) proxy.getVariable("rt_value"))[0]; currentPredictions[4]
+		 * = ((double[]) proxy.getVariable("svm_value"))[0];
+		 * currentPredictions[5] = ((double[]) proxy.getVariable("minima"))[0];
+		 */
+
+		/*
+		 * Get the current predictions for time t+1; order:[es, foa, rwa, dfoa,
+		 * soa, reg_trees]!
+		 */
 		currentPredictions[0] = ((double[]) proxy.getVariable("es"))[0];
 		currentPredictions[1] = ((double[]) proxy.getVariable("foa"))[0];
 		currentPredictions[2] = ((double[]) proxy.getVariable("rwa"))[0];
 		currentPredictions[3] = ((double[]) proxy.getVariable("dfoa"))[0];
 		currentPredictions[4] = ((double[]) proxy.getVariable("soa"))[0];
 		currentPredictions[5] = ((double[]) proxy.getVariable("rt_value"))[0];
-		
+
 		return currentPredictions;
 	}
 
 	public static PredictorMetrics runWMA(double[] previousPredictions,
 			double[] currentPredictions, HashMap<Integer, Integer> weights,
 			int currentValue) {
+
 		// Weighted Majority Algorithm
 		double predictedValue = 0;
 
@@ -91,7 +105,7 @@ public class MatlabControl {
 		// The more accurate algorithm
 		double minValueInMap = (Collections.min(map.values()));
 
-		// Iterate through hashmap and get the key with min value
+		// Iterate through hashmap and get the key with Min value
 		for (Entry<Integer, Integer> entry : map.entrySet()) {
 			// System.out.print("\t" + entry.getValue());
 			if (entry.getValue() == minValueInMap) {
@@ -100,8 +114,10 @@ public class MatlabControl {
 			}
 		}
 
-		// Penalize each mistaken prediction by subtracting its weight by 1
-		// Reward the Winner
+		/*
+		 * Penalize each mistaken prediction by subtracting its weight by 1
+		 * Reward the Winner
+		 */
 		for (Entry<Integer, Integer> entry : weights.entrySet()) {
 			if (entry.getKey() != keyOfMaxValue) {
 				if (entry.getValue() != 0 && entry.getValue() <= 3) {
@@ -119,8 +135,10 @@ public class MatlabControl {
 				}
 			}
 		}
-		// predictedValue = prediction corresponding to the highest
-		// weight
+
+		/*
+		 * predictedValue = prediction corresponding to the highest weight
+		 */
 		int winner = 0;
 		int maxValueInWeights = (Collections.max(weights.values()));
 		for (Entry<Integer, Integer> entry : weights.entrySet()) {

@@ -24,7 +24,8 @@ public class PredictorUtilities {
 	 */
 	public OnlineModelMetrics[][][] readDataFile(
 			OnlineModelMetrics[][][] datapoints) {
-		String csvFile = "dataFile.txt";
+
+		String csvFile = "data/WarmUpData.txt";
 		BufferedReader br = null;
 		String line = "";
 		String cvsSplitBy = ",";
@@ -49,7 +50,7 @@ public class PredictorUtilities {
 				String[] rqArray = rq.split(";");
 				Queue<Integer> rqe = new LinkedList<Integer>();
 				Queue<Integer> wqe = new LinkedList<Integer>();
-				
+
 				wqe.add(0);
 				for (int i = 0; i < rqArray.length; i++) {
 					rqe.add(Integer.parseInt(rqArray[i].trim()));
@@ -120,8 +121,10 @@ public class PredictorUtilities {
 		return l;
 	}
 
-	// TODO: The loops can also be a performance bottleneck need to be
-	// eliminated
+	/*
+	 * TODO: The loops can also be a performance bottleneck need to be
+	 * eliminated
+	 */
 
 	/**
 	 * Returns the Training data in a multidimensional(2D) array needed by
@@ -157,13 +160,13 @@ public class PredictorUtilities {
 				dsz, writes, reads);
 		return data2dArray;
 	}
-	
-	public static double[][] convertIntegers(List<Double> list){
+
+	public static double[][] convertIntegers(List<Double> list) {
 		double[][] ret = new double[list.size()][1];
 		for (int i = 0; i < ret.length; i++) {
 			for (int j = 0; j < ret[i].length; j++) {
 				ret[i][j] = list.get(i).doubleValue();
-				//System.out.println(ret[i][j]);
+				// System.out.println(ret[i][j]);
 			}
 		}
 		return ret;
