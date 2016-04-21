@@ -26,16 +26,16 @@ The following parameters were considered when building the online performance mo
 - Read and Write lantency queue
 - Confidence level
 
-The controller also keeps a list of all available instances (should be provided initially in the List_of_CassandraNodes.txt file) with their state (active or inac- tive). This list is updated upon decommissioning or commissioning operations.
+The controller also keeps a list of all available instances (should be provided initially in the List_of_CassandraNodes.txt file) with their state (active or inactive). This list is updated upon decommissioning or commissioning operations.
 
 Below is a list of parameters that needs to be specified for the running of OnlineElastMan
 
 #List of Online Elasticity Manager config properties...Default
 
 - Periodic timer(in seconds) to pull statistics from the Cassandra Node
-timerWindow=10
+> timerWindow=10
 
-- Dimensions metrics: the Maximum Read and Write Throughput(ops/sec), DataSize(KB), Your MaxDimensions should be equal or greater than your scale 
+- Dimensions metrics: the Maximum Read and Write Throughput (ops/sec), DataSize(KB), Your MaxDimensions should be equal or greater than your scale 
 > maxReadTP=1010
 > maxWriteTP=1010
 > maxDataSize=10
