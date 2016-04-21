@@ -32,7 +32,7 @@ Below is a list of parameters that needs to be specified for the running of Onli
 
 #List of Online Elasticity Manager config properties...Default
 
-- Periodic timer(in seconds) to pull statistics from the Cassandra Node
+- Periodic timer (in seconds) to pull statistics from the Cassandra Node
 > timerWindow=10
 
 - Dimensions metrics: the Maximum Read and Write Throughput (ops/sec), DataSize(KB), Your MaxDimensions should be equal or greater than your scale 
